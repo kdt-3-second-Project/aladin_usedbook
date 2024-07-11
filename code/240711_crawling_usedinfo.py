@@ -19,6 +19,7 @@ selector_dict = {
    'price': ('td:nth-child(4) > div > ul > li.Ere_sub_pink > span',lambda x : x.get_text().strip().replace(',','')),
    'delivery_fee': ('td:nth-child(4) > div > ul > li:nth-child(3)',lambda x : x.get_text().strip().split(' : ')[1][:-1].replace(',','')),
    'url': ('td.sell_tableCF1 > a',lambda x : x['href']),
+   'store':('td:nth-child(5) > div > ul > li.Ere_store_name > a',lambda x : x.get_text()),
 }
 
 def class_name(clss):
@@ -26,7 +27,7 @@ def class_name(clss):
   name = name[1:-1].split(' ')
   return name[1]
 
-def crwal_usedifo(id_list,work_type='range',num0=0, num1=None):
+def crawl_usedifo(id_list,work_type='range',num0=0, num1=None):
     data_dict,errored_item = dict(), dict()
     null_used, rest_count = list(), 0
     if work_type=='range':
@@ -112,7 +113,7 @@ def prjct_config():
     parser.add_argument('--file_path',default=None)
     args = parser.parse_args()
     
-    work_type, start_idx, work_feat = int(args.work_type),int(args.start_idx),int(args.work_feat)
+    work_type, start_idx, work_feat = args.work_type,int(args.start_idx),int(args.work_feat)
     file_path = args.file_path
     return file_path,work_type,start_idx,work_feat
 
@@ -124,23 +125,25 @@ if __name__ =='__main__':
     id_list = list(df_unused.ItemId.values)
     
     #work_type : 'worker' 1/n씩 하기 / 'range' 특정 구간에 대해서 하기
-    work_type = 'worker'
-    feat_0, feat_1 = 0, 100
-    data_dict, errored_item, null_used = crwal_usedifo(id_list,work_type,feat_0,feat_1)
+    work_info = work_type,start_idx,work_feat
+    data_dict, errored_item, null_used = crawl_usedifo(id_list,*work_info)
     
-    cols = ['delivery_fee','price','quality','url']
-    pvtb = process_datadict(data_dict)
+    cols = ['delivery_fee','price','quality','url','store']
+    pvtb = process_datadict(data_dict,cols)
     pvtb = pvtb.rename(columns={"level_1":"used_idx"})
     
     save_dir = os.path.join(PRJCT_PATH,'processed','usedbook_data')
-    
-    pvtb_name = 'usedproduct_{}_{}_{}_{}.csv'.format(file_name[:-4],'range',0,100)
+    work_info = work_type,start_idx,work_feat
+    pvtb_name = 'usedproduct_{}_{}_{}_{}.csv'.format(file_name[:-4],*work_info)
     save_path = os.path.join(save_dir,pvtb_name)
     pvtb.to_csv(save_path,index=True,index_label='ItemId')
-    errored_name = 'errored_{}_{}_{}_{}.pkl'.format(file_name[:-4],'range',0,100)
-    null_name = 'nullused_{}_{}_{}_{}.pkl'.format(file_name[:-4],'range',0,100)
+    print("file saved : usedproduct_data | {} | {} | {} | {} | len : {}".format(file_name[:-4],*work_info,len(pvtb)))
+    errored_name = 'errored_{}_{}_{}_{}.pkl'.format(file_name[:-4],*work_info)
+    null_name = 'nullused_{}_{}_{}_{}.pkl'.format(file_name[:-4],*work_info)
     save_pkl(save_dir,errored_name,errored_item)
+    print("file saved : errored_item | {} | {} | {} | {} | len : {}".format(file_name[:-4],*work_info,len(errored_item)))
     save_pkl(save_dir,null_name,null_used)
+    print("file saved : null_used | {} | {} | {} | {} | len : {}".format(file_name[:-4],*work_info,len(null_used)))
     
     
     
