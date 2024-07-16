@@ -323,18 +323,18 @@ cond_mul = authors.str.split(',').apply(len) > 1
 bookinfo_processed['Author'] = authors.apply(extract_author1)
 bookinfo_processed['Author_mul'] = cond_mul
 
-authors = bookinfo['Author']
+authors = bookinfo_processed['Author']
 authors = authors.apply(erase_role)
 temp = authors.apply(lambda x : re.sub(r'\s\d+[인명]$','',x))
 bookinfo_processed['Author'] = temp
 
-authors = bookinfo['Author']
+authors = bookinfo_processed['Author']
 temp = authors.str.split(' ').apply(lambda x : x[-1])
 cond = temp == '외'
 temp = temp[cond]
-temp = temp.str.split(' ').apply(lambda x : ' '.join(x[:-1]))
-bookinfo.loc[cond,'Author'] = temp
-bookinfo.loc[cond,'Author_mul'] = True
+temp = authors.str.split(' ').apply(lambda x : ' '.join(x[:-1]))
+bookinfo_processed.loc[cond,'Author'] = temp
+bookinfo_processed.loc[cond,'Author_mul'] = True
 
 #정리
 new_cols = cols.copy()
@@ -342,6 +342,6 @@ new_cols.insert(4,'Author_mul')
 new_cols.insert(2,'BName_sub')
 bookinfo_processed = bookinfo_processed[new_cols]
 
-file_name = 'bookinfo_ver{}.csv'.format(0.5)
+file_name = 'bookinfo_ver{}.csv'.format(0.75)
 save_path = os.path.join(PRJCT_PATH,'processed',file_name)
 bookinfo_processed.to_csv(save_path,index=False)
