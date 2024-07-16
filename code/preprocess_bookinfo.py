@@ -24,7 +24,8 @@ col_name_dict= {
 }
 
 roles = [
-'글', '시', '역', '외',
+'글', '시', '역',
+#'외',
 '제공',
 '소설',
 '극본',
@@ -64,7 +65,7 @@ roles = [
 '요리',
 '기획',
 '원작',
-'머리',
+#'머리',
 '지도',
 '작곡','대담','편곡',
 '디자인','스토리','디렉터','풀어씀','총편집','엮고지음',
@@ -82,18 +83,21 @@ roles = [
 '기획.제작',
 '동영상강의',
 '엮음.사진',
-'관리위원회',
+#'관리위원회',
 '기획.채록',
 '편집·해설',
 '사진.캘리그라피'
 ]
 
+def erase_role(content:str):
+    temp = content.strip().split(' ')
+    if temp[-1] not in roles: return content.strip()
+    else : return ' '.join(temp[:-1])
+
 
 def extract_author1(content:str):
     ele0 = content.split(',')[0].strip()
-    temp = ele0.split(' ')
-    if temp[-1] not in roles: return ele0
-    else : return ' '.join(temp[:-1])
+    return erase_role(ele0)
 
 def clear_patterns(patterns:dict,sentence):
     for pat in patterns.values() :
@@ -243,6 +247,7 @@ roman_number ={
 
 special_chr = {
   '&#xFF3C;' : '\\',
+  '／':'/',
 }
 
 def erase_num_comma(text):
@@ -257,6 +262,18 @@ def replace_by_dict(text,chr_dict):
     for key,val in chr_dict.items():
         text = text.replace(key,val)
     return text
+
+def change_num2year(text):
+    pat = r'\'\d\d(?!\d)'
+    temp = sorted([m.start() for m in re.finditer(pat,text)])
+    rslt = list(text)
+    for i in temp[::-1]:
+        t = text[i+1:i+3]
+        digit = int(t)
+        if digit > 59 : rslt[i] = '19'
+        else : rslt[i] = '20'
+    return ''.join(rslt)
+
 
 date = 240711
 file_name = f'unused_filtered_{date}.csv'
@@ -276,6 +293,7 @@ bookinfo_processed = bookinfo_processed[cols]
 #도서명
 titles = bookinfo['BName']
 titles = titles.apply(erase_num_comma)
+titles = titles.apply(change_num2year)
 titles = titles.apply(lambda x : replace_by_dict(x,roman_number))
 titles = titles.apply(lambda x : replace_by_dict(x,special_chr))
 titles = titles.apply(translate_hanja)
@@ -305,6 +323,20 @@ cond_mul = authors.str.split(',').apply(len) > 1
 bookinfo_processed['Author'] = authors.apply(extract_author1)
 bookinfo_processed['Author_mul'] = cond_mul
 
+authors = bookinfo['Author']
+authors = authors.apply(erase_role)
+temp = authors.apply(lambda x : re.sub(r'\s\d+[인명]$','',x))
+bookinfo_processed['Author'] = temp
+
+authors = bookinfo['Author']
+temp = authors.str.split(' ').apply(lambda x : x[-1])
+cond = temp == '외'
+temp = temp[cond]
+temp = temp.str.split(' ').apply(lambda x : ' '.join(x[:-1]))
+bookinfo.loc[cond,'Author'] = temp
+bookinfo.loc[cond,'Author_mul'] = True
+
+#정리
 new_cols = cols.copy()
 new_cols.insert(4,'Author_mul')
 new_cols.insert(2,'BName_sub')
