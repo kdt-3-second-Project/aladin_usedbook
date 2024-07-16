@@ -33,7 +33,7 @@ def crawl_usedifo(id_list,work_type='range',num0=0, num1=None):
     if work_type=='range':
         if num1 is None : num1 = len(id_list)
         work_target = id_list[num0:num1]
-    elif work_type=='worker':
+    elif work_type=='step':
         if num1 is None : num1 = 1
         work_target = id_list[num0::num1]
 
@@ -107,10 +107,10 @@ def save_pkl(save_dir,file_name,save_object):
 
 def prjct_config():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--work_type',default='worker')
-    parser.add_argument('--work_feat',default=None)
-    parser.add_argument('--start_idx',default=0)
-    parser.add_argument('--file_path',default=None)
+    parser.add_argument('--work_type','-t',default='worker')
+    parser.add_argument('--work_feat','-n',default=None)
+    parser.add_argument('--start_idx','-i',default=0)
+    parser.add_argument('--file_path','-f',default=None)
     args = parser.parse_args()
     
     work_type, start_idx, work_feat = args.work_type,int(args.start_idx),int(args.work_feat)
