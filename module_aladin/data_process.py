@@ -49,3 +49,7 @@ def concat_files(file_list):
     elif file_type == dict :
         rslt = functools.reduce(concat_dict,file_list)
     return rslt
+
+def pd_datetime_2_datenum(times):
+    times = times.to_numpy(dtype=np.int64)
+    return times/1e11 

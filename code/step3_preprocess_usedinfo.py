@@ -18,10 +18,6 @@ quality_dict= {
     '하':1
 }
 
-def pd_datetime_2_datenum(times):
-    times = times.to_numpy(dtype=np.int64)
-    return times/1e11 
-
 if __name__=='__main__':
     save_dir = 'processed/usedbook_data/concatted'
     date = 240711
@@ -36,19 +32,6 @@ if __name__=='__main__':
     file_name = 'usedinfo_ver{}.csv'.format(0)
     save_path = os.path.join(PRJCT_PATH,'processed',file_name)
     usedinfo.to_csv(save_path,index=False)
-    
-    bookinfo_name = 'bookinfo_ver{}.csv'.format(0.8)
-    bookinfo_path = os.path.join(RSLT_DIR,bookinfo_name)
-    bookinfo = pd.read_csv(bookinfo_path)
-    
-    book_cols = ['BName', 'BName_sub', 'Author', 'Author_mul', 'Publshr', 'Pdate',
-           'RglPrice', 'SlsPrice', 'SalesPoint', 'Category']
-    for col in book_cols:
-        usedinfo[col] = usedinfo['ItemId'].apply(lambda x: bookinfo.loc[x,col])
-    #pd concat 이나 join을 이용하는 것으로 바꿔야 함
-    
-    usedinfo['Pdate']= pd.to_datetime(usedinfo.Pdate,format='%Y-%m-%d')
-    usedinfo['Pdate'] = pd_datetime_2_datenum(usedinfo['Pdate']) 
     
     y_col = 'price'
     x_cols = list(filter(lambda x : x != y_col,list(usedinfo.columns)))

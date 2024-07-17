@@ -1,6 +1,6 @@
 import numpy as np
 import pandas as pd
-import os, natsort, re,sys
+import copy, os, sys
 from tqdm import tqdm
 PRJCT_PATH = '/home/doeun/code/AI/ESTSOFT2024/workspace/2.project_text/aladin_usedbook/'
 RSLT_DIR = PRJCT_PATH + 'processed/'
@@ -12,35 +12,36 @@ usedinfo_path = os.path.join(RSLT_DIR,usedinfo_name)
 
 sys.path.append(PRJCT_PATH)
 from module_aladin.file_io import load_pkl, save_pkl
+from module_aladin.data_process import pd_datetime_2_datenum
 
 from konlpy.tag import Mecab
 from tensorflow.keras.preprocessing.sequence import pad_sequences
 import itertools
+from sklearn.preprocessing import MinMaxScaler
 
-def load_data_dict(file_path):
-    data_splitted = load_pkl(file_path)
-    
-    X_train, y_train = data_splitted['train'].values()
-    X_val, y_val = data_splitted['val'].values()
-    X_test, y_test = data_splitted['test'].values()
-    return X_train,y_train,X_val,y_val,X_test,y_test
-    
+def set_maxlen(data,maxlen,mode):
+    #maxlen 이름 정리 필요
+    if maxlen == None : maxlen = len(data)
+    if maxlen > len(data) : maxlen = len(data)
+    if mode == 'uniform':
+        cond = data['counts']>=data['counts'].iloc[maxlen]
+        maxlen = np.sum(cond)
+    elif mode =='ths':
+        cond = data[data['counts'] > maxlen]
+        maxlen = np.sum(cond)
+    return maxlen
 
-def make_encoding_by_freq(corpus,null_val='[PAD]',maxlen=None):
+def make_encoding_by_freq(corpus,null_val='[PAD]',maxlen=None,mode=None):
     df_corpus = pd.DataFrame(corpus).T
     df_corpus = df_corpus.rename(columns={0:'token',1:'counts'})
-    
-    if maxlen == None : maxlen = len(df_corpus)
-    if maxlen > len(df_corpus) : maxlen = len(df_corpus)
-    
     temp = df_corpus.sort_values(by='counts',ascending=False)
+    maxlen = set_maxlen(temp,maxlen,mode)
     temp = temp.iloc[:maxlen]
-    temp['val'] = np.arange(len(temp))+1
+    temp['val'] = np.arange(maxlen)+1
     temp2 = temp.set_index('token').to_dict()
     map_token_encode = temp2['val']
     map_token_encode[null_val]=0
     return map_token_encode
-    
 
 def encode_tokens(map_token,x,oov=True):
     oov_val =max(map_token.values())+1 if oov else 0
@@ -49,122 +50,120 @@ def encode_tokens(map_token,x,oov=True):
 if __name__=='__main__':
     file_name = 'data_splitted_ver{}.pkl'.format(0.8)
     file_path = os.path.join(RSLT_DIR,file_name)
-    X_train,y_train,X_val,y_val,X_test,y_test = load_data_dict(file_path)
+    data = load_pkl(file_path)
+    
     file_name = 'bookinfo_ver{}.csv'.format(0.8)
     file_path = os.path.join(RSLT_DIR,file_name)
     bookinfo = pd.read_csv(file_path)
-    item_list = list(X_train['ItemId'].values)
-    book_train = bookinfo[bookinfo['ItemId'].isin(item_list)]
-   
-   # corpus는 bookinfo를 보고 만들되 replace는 usedinfo에 해야함을 주의해서 아래 부분 다시 수정해야 함
     
-    #encoding train
-    #using tokenizer : BName, BName_sub, Category
+    book_dict=dict()
+    for mode,sample in data.items():
+        item_list = list(sample['X']['ItemId'].values)
+        book_dict[mode]= bookinfo[bookinfo['ItemId'].isin(item_list)]
+    
     mecab = Mecab()
     tokenizer_basic = lambda x : mecab.morphs(x)
+    #apply tokenizer
+    cols_tknz = ['Category','BName','BName_sub']
+    cols_freq = ['Author','Publshr','store']
+    for mode, bookinfo in book_dict.items():
+        for col in cols_tknz:
+            bookinfo[col] = bookinfo[col].fillna('').apply(tokenizer_basic)
+        book_dict[mode] = bookinfo    
     
-    book_name,book_subname, category = book_train.BName, book_train.BName_sub, book_train.Category
-    book_name = book_name.apply(tokenizer_basic)
-    book_subname = book_subname.fillna('').apply(tokenizer_basic)
-    category = category.apply(tokenizer_basic)
-    
+    #make encoding map
+    book_tknzed = book_dict['train'][cols_tknz].to_dict('series')
+    book_name, book_subname, category = book_tknzed['BName'], book_tknzed['BName_sub'],book_tknzed['Category']
     tokens = np.array(list(itertools.chain(*book_name.values,*book_subname.values,*category.values)))
     corpus = np.unique(tokens,return_counts=True)
     map_token_encode = make_encoding_by_freq(corpus,maxlen=32000)
-    #padding
-    padded_bookname = pad_sequences(book_name,padding='post',maxlen=30,value='[PAD]',dtype=object)
-    padded_subname = pad_sequences(book_subname,padding='post',maxlen=25,value='[PAD]',dtype=object)
-    padded_category = pad_sequences(category,padding='post',maxlen=5,value='[PAD]',dtype=object)
-    #encode
     encode_1line =lambda x: list(map(lambda y : encode_tokens(map_token_encode,y),x))
-    encoded_bookname = np.apply_along_axis(encode_1line,0,padded_bookname)
-    encoded_subname = np.apply_along_axis(encode_1line,0,padded_subname)
-    encoded_category = np.apply_along_axis(encode_1line,0,padded_category)
     
-    #only by frequency : Author,Publshr,store
-    
-    ths_author = np.round(len(book_train)/4500)*500
-    
-    pvtb = pd.pivot_table(data=book_train,index='Author',values='SalesPoint',aggfunc=np.sum)
+    ths_author = np.round(len(book_name)/4500)*500
+    ths_publshr = np.round(len(book_name)/4500)*30
+
+    pvtb = pd.pivot_table(data=bookinfo,index='Author',values='SalesPoint',aggfunc=np.sum)
     pvtb = pvtb.sort_values(by='SalesPoint',ascending=False)
     author_top_slspnt= pvtb[pvtb['SalesPoint']>=ths_author].index
     encode_author = pd.DataFrame({'author' : author_top_slspnt.values,'val':np.arange(1,len(author_top_slspnt)+1)})
     encode_author = encode_author.set_index('author')
-    encode_map_author=encode_author.to_dict()['val']
-    encode_map_author['기타 저자'] = 0
-    authors = book_train.Author
-    cond = authors.isin(author_top_slspnt)
-    authors[~cond] = '기타 저자'
-    encoded_author = authors.map(encode_map_author)
+    map_author_encode=encode_author.to_dict()['val']
+    
+    encode_maps = {
+        'Author' : lambda x : encode_tokens(map_author_encode,x,oov=False),
+        'Publshr' : lambda x : encode_tokens(map_publshr_encode,x,oov=False),
+        'store' : lambda x : encode_tokens(map_store_encode,x,oov=False)
+    }
 
-    publshrs = book_train.Publshr
-    map_publs_encode = make_encoding_by_freq(publshrs.value_counts(),maxlen=32000)
-    encoded_publshr = publshrs.map(lambda x: encode_tokens(map_publs_encode,x,oov=False)) 
-    
-    X_train['BName'] = list(encoded_bookname)
-    X_train['BName_sub'] = list(encoded_subname)
-    X_train['Publshr'] = encoded_publshr
-    X_train['Author'] = encoded_author
-    X_train['Category'] = list(encoded_category)
-    
-    cols_arry = ['Category','BName','BName_sub']
-    temp = X_train[cols_arry].values
-    temp_concat =np.apply_along_axis(np.hstack,1,temp)
-    
+    maxlens={
+        'Category' : 5,
+        'BName' : 30,
+        'BName_sub' : 25
+    }
     x_cols = ['ItemId', 'quality', 'store', 'BName', 'BName_sub', 'Author',
-       'Author_mul', 'Publshr', 'Pdate', 'RglPrice', 'SlsPrice', 'SalesPoint',
+       'Author_mul', 'Publshr', 'Pdate', 'RglPrice', 'SalesPoint',
        'Category']
-    xcols_scalar = list(filter(lambda x : x not in cols_arry+['ItemId'],x_cols))
-    x_scalar = X_train[xcols_scalar].values
-    X = np.hstack((temp_concat,x_scalar))
-    x_id = X_train['ItemId'].values.reshape(-1,1)
-    X = np.hstack((x_id,X))
     
+    book_cols = ['BName', 'BName_sub', 'Author', 'Author_mul', 'Publshr', 'Pdate',
+           'RglPrice', 'SlsPrice', 'SalesPoint', 'Category']
+    xcols_scalar = list(filter(lambda x : x not in cols_tknz+['ItemId'],x_cols)) 
     
-    #encoding val
+    #attach bookinfo to usedifo
+    for mode,sample in data.items():
+        X_mode,bookinfo = sample['X'], book_dict[mode]
+        for col in book_cols:
+            X_mode[col] = X_mode['ItemId'].apply(lambda x: bookinfo.loc[x,col])
+        data[mode]['X'] = X_mode
+    #pd concat 이나 join을 이용하는 것으로 바꿔야 함
     
-    #encoding test
+    #encode X 
+    X_encoded=dict()
+    for mode,sample in data.items():
+        X_mode = sample['X']
+        #padding and encoding
+        encoded = pd.DataFrame(X_mode['ItemId']) 
+        for col in cols_tknz :
+            padded = pad_sequences(X_mode[col],padding='post',
+                                   maxlen=maxlens[col],
+                                   value='[PAD]',dtype=object)
+            encoded[col] = list(np.apply_along_axis(encode_1line,0,padded))
+        #concat encoded
+        for col in cols_freq:
+            encoded[col] = X_mode['Author'].map(encode_maps[col])
+        encoded['Pdate']= pd.to_datetime(X_mode['Pdate'],format='%Y-%m-%d')
+        encoded['Pdate']= pd_datetime_2_datenum(encoded['Pdate'])
+        cols_else = list(filter(lambda x : x not in encoded.columns,x_cols))
+        encoded[cols_else] = X_mode[cols_else]
 
-    from sklearn.preprocessing import MinMaxScaler
+        concat_tknzed =np.apply_along_axis(np.hstack,1,encoded[cols_tknz].values)
+        x_scalar = encoded[xcols_scalar].values
+        X = np.hstack((concat_tknzed,x_scalar))
+        x_id = encoded['ItemId'].values.reshape(-1,1)
+        X = np.hstack((x_id,X))
+        X_encoded[mode] = X    
 
-    scale_partition = [(1,61)]+[(61+i,62+i) for i in range(9)]
-    import copy
+    #scaling
+    len_tknzed, len_scalar = sum(maxlens.values()), len(xcols_scalar)
+    scale_partition = [(1,len_tknzed+1)]+[(len_tknzed+1+i,len_tknzed+2+i) for i in range(len_scalar)]
     scaler_list = [copy.deepcopy(MinMaxScaler()) for _ in scale_partition]
     scalers = list(zip(scale_partition,scaler_list))
+    
+    X_scaled = dict()
+    for mode in ['train','val','test']:
+        intermid = []
+        for (cols,scaler) in scalers:
+            sliced = X_encoded[mode][:,cols[0]:cols[1]]
+            sliced = sliced.astype(np.float64)
+            if mode == 'train': sliced = scaler.fit_transform(sliced)
+            else : sliced = scaler.transform(sliced)
+            intermid.append(sliced)
 
-    intermid = []
-    for (cols,scaler) in scalers:
-        sliced = X_train[:,cols[0]:cols[1]]
-        sliced = sliced.astype(np.float64)
-        sliced = scaler.fit_transform(sliced)
-        intermid.append(sliced)
-
-    X_train_scaled = np.hstack(intermid)
-
-    intermid = []
-    for (cols,scaler) in scalers:
-        sliced = X_val[:,cols[0]:cols[1]]
-        sliced = sliced.astype(np.float64)
-        sliced = scaler.transform(sliced)
-        intermid.append(sliced)
-
-    X_val_scaled = np.hstack(intermid)
-
-    intermid = []
-    for (cols,scaler) in scalers:
-        sliced = X_test[:,cols[0]:cols[1]]
-        sliced = sliced.astype(np.float64)
-        sliced = scaler.transform(sliced)
-        intermid.append(sliced)
-
-    X_test_scaled = np.hstack(intermid)
-
+        X_scaled[mode] = np.hstack(intermid)
+    
     data_type = 'sample'
     ver=0.8
     dir_path = os.path.join(RSLT_DIR,'model_input')
-    save_pkl(dir_path,'{}.v{}_X_train.pkl'.format(data_type,ver),X_train_scaled)
-    save_pkl(dir_path,'{}.v{}_X_val.pkl'.format(data_type,ver),X_val_scaled)
-    save_pkl(dir_path,'{}.v{}_X_test.pkl'.format(data_type,ver),X_test_scaled)
-    save_pkl(dir_path,'{}.v{}_y_train.pkl'.format(data_type,ver),y_train)
-    save_pkl(dir_path,'{}.v{}_y_val.pkl'.format(data_type,ver),y_val)
-    save_pkl(dir_path,'{}.v{}_y_test.pkl'.format(data_type,ver),y_test)
+    for mode, x_scaled in X_scaled.items():
+        save_pkl(dir_path,'{}.v{}_X_{}.pkl'.format(data_type,ver,mode),x_scaled)
+    for mode,sample in data.items(): 
+        save_pkl(dir_path,'{}.v{}_y_{}.pkl'.format(data_type,ver,mode),sample['y'])
