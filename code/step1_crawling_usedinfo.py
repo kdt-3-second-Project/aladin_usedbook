@@ -3,29 +3,27 @@ import pandas as pd
 from bs4 import BeautifulSoup
 import requests
 import re
-import os, natsort
+import os, natsort,sys
 from tqdm import tqdm
 import time, random
 import argparse
 
 PRJCT_PATH = '/home/doeun/code/AI/ESTSOFT2024/workspace/2.project_text/aladin_usedbook'
+
+sys.path.append(PRJCT_PATH)
+from module_aladin.config import url_usedinfo, base_table, selector_dict
+from module_aladin.util import class_name
+from module_aladin.data_process import nested_dict_to_df, check_pvtb_of_list
+from module_aladin.file_io import save_pkl
+
 save_dir = 'processed'
 
-url_usedinfo = 'https://www.aladin.co.kr/shop/UsedShop/wuseditemall.aspx?ItemId={}&TabType=3&Fix=1'
-
-base_table ='#Ere_prod_allwrap_box > div.Ere_prod_middlewrap > div.Ere_usedsell_table > table' 
-selector_dict = {
-   'quality': ('td:nth-child(3) > span > span',lambda x : x.__dict__['contents'][0].strip()),
-   'price': ('td:nth-child(4) > div > ul > li.Ere_sub_pink > span',lambda x : x.get_text().strip().replace(',','')),
-   'delivery_fee': ('td:nth-child(4) > div > ul > li:nth-child(3)',lambda x : x.get_text().strip().split(' : ')[1][:-1].replace(',','')),
-   'url': ('td.sell_tableCF1 > a',lambda x : x['href']),
-   'store':('td:nth-child(5) > div > ul > li.Ere_store_name > a',lambda x : x.get_text()),
-}
-
-def class_name(clss):
-  name = str(type(clss)).strip()
-  name = name[1:-1].split(' ')
-  return name[1]
+def check_time_2_sleep(idx,num,rest_count):
+    if idx % (num+random.uniform(0,5)) == 1 :
+        rest_count,sleeping_time = rest_count+1, (random.uniform(1,3))/2
+        print('time to rest **^^** : ',rest_count," | ",sleeping_time)
+        time.sleep(sleeping_time)
+    return rest_count
 
 def crawl_usedifo(id_list,work_type='range',num0=0, num1=None):
     data_dict,errored_item = dict(), dict()
@@ -39,11 +37,8 @@ def crawl_usedifo(id_list,work_type='range',num0=0, num1=None):
 
     for n,book_id in enumerate(tqdm(work_target)):
         url = url_usedinfo.format(book_id) 
+        rest_count = check_time_2_sleep(n,100,rest_count)
         data = dict()
-        if n % (100+random.uniform(0,5)) == 1 :
-            rest_count,sleeping_time = rest_count+1, (random.uniform(1,3))/2
-            print('time to rest **^^** : ',rest_count," | ",sleeping_time)
-            time.sleep(sleeping_time)
         try:
             r = requests.get(url)
             if r.status_code != 200: raise Exception('bad request')
@@ -69,41 +64,17 @@ def crawl_usedifo(id_list,work_type='range',num0=0, num1=None):
             errored_item[book_id] = f'{class_name(e)}/{e}'
     
     return data_dict, errored_item, null_used
-    
-def nested_dict_to_df(data:dict,sep='$'):
-    df_in = pd.json_normalize(data,sep=sep)
-    df_in.columns = df_in.columns.str.split(sep, expand=True)
-    df_reform = df_in.loc[0]
-    return df_reform.reset_index()
 
-def check_pvtb_of_list(df,cols):
-    len_pvtb = df[cols].apply(lambda x : list(map(len,x)))
-    return np.sum(np.sum(~(len_pvtb == 1))) == 0
-    
-def uncover_list_pvtb(df,cols):
-    df[cols] = df[cols].apply(lambda x : list(map(lambda y: y[0],x)))
-    return df
+#def uncover_list_pvtb(df,cols):
+#    df[cols] = df[cols].apply(lambda x : list(map(lambda y: y[0],x)))
+#    return df
 
 def process_datadict(data_dict,cols):
     data_df = nested_dict_to_df(data_dict)
     pvtb = pd.pivot_table(data=data_df,values=0,index=['level_0','level_1'],columns='level_2',aggfunc=list).reset_index(level=[1])
-    if not check_pvtb_of_list(pvtb,cols): return pvtb
+    if not check_pvtb_of_list(pvtb,cols): return pvtb, False
     pvtb[cols] = pvtb[cols].apply(lambda x : list(map(lambda y: y[0],x)))
-    return pvtb
-
-def chcek_and_mkdir(func):
-    def wrapper(*args,**kwargs):
-        if not os.path.exists(args[0]): os.mkdir(args[0])
-        return func(*args,**kwargs)
-    return wrapper
-
-import pickle
-
-def save_pkl(save_dir,file_name,save_object):
-    if not os.path.exists(save_dir): os.mkdir(save_dir)
-    file_path = os.path.join(save_dir,file_name)
-    with open(file_path,'wb') as f:
-        pickle.dump(save_object,f)
+    return pvtb, True
 
 def prjct_config():
     parser = argparse.ArgumentParser()
@@ -124,28 +95,27 @@ if __name__ =='__main__':
     
     id_list = list(df_unused.ItemId.values)
     
-    #work_type : 'worker' 1/n씩 하기 / 'range' 특정 구간에 대해서 하기
+    #work_type : 'step' 1/n씩 하기 / 'range' 특정 구간에 대해서 하기
     work_info = work_type,start_idx,work_feat
     data_dict, errored_item, null_used = crawl_usedifo(id_list,*work_info)
     
     cols = ['delivery_fee','price','quality','url','store']
-    pvtb = process_datadict(data_dict,cols)
+    pvtb,flag = process_datadict(data_dict,cols)
+    if not flag : print('error occured when making pivot table')
     pvtb = pvtb.rename(columns={"level_1":"used_idx"})
-    
+
+    #save rslts    
     save_dir = os.path.join(PRJCT_PATH,'processed','usedbook_data')
-    work_info = work_type,start_idx,work_feat
+    #usedproduct
     pvtb_name = 'usedproduct_{}_{}_{}_{}.csv'.format(file_name[:-4],*work_info)
     save_path = os.path.join(save_dir,pvtb_name)
     pvtb.to_csv(save_path,index=True,index_label='ItemId')
     print("file saved : usedproduct_data | {} | {} | {} | {} | len : {}".format(file_name[:-4],*work_info,len(pvtb)))
+    #errored IthemId
     errored_name = 'errored_{}_{}_{}_{}.pkl'.format(file_name[:-4],*work_info)
     null_name = 'nullused_{}_{}_{}_{}.pkl'.format(file_name[:-4],*work_info)
     save_pkl(save_dir,errored_name,errored_item)
     print("file saved : errored_item | {} | {} | {} | {} | len : {}".format(file_name[:-4],*work_info,len(errored_item)))
+    #usdeinofo down't exist
     save_pkl(save_dir,null_name,null_used)
-    print("file saved : null_used | {} | {} | {} | {} | len : {}".format(file_name[:-4],*work_info,len(null_used)))
-    
-    
-    
-    
-    
+    print("file saved : null_used | {} | {} | {} | {} | len : {}".format(file_name[:-4],*work_info,len(null_used)))    

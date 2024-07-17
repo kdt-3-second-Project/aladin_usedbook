@@ -17,6 +17,12 @@ def lists_append_together(lists:list,data:list):
     tuple(map(lambda x : x[0].append(x[1]),zip(lists,data)))
     return lists
 
+def class_name(clss):
+    name = str(type(clss)).strip()
+    name = name[1:-1].split(' ')
+    return name[1]
+
+
 def train_test_split_strat_y(X:pd.DataFrame,y:pd.Series,method='order',n_strata=10,**kwargs):
     if method in ['quantile','order'] :
         p_arr = np.linspace(0,n_strata)/n_strata
