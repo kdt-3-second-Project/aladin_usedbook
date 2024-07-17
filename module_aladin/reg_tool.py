@@ -60,13 +60,13 @@ def print_reg_score_dict(name,dict_score,cut_line=True):
           'mape_model : {:.5f} / mape_base : {:.5f}\t'.format(*dict_score['mape']))
     if cut_line : print('-'*150)
 
-def make_reg_score_dict_cols(dict_data,dict_rslt,print_rslt=False):
+def make_reg_score_entire(dict_data,dict_rslt,print_rslt=False):
     dict_score = dict()
     for col, val in dict_data.items():
-        train_y = val['train']['y']
-        valid_y = val['valid']['y']
-        y_pred = dict_rslt[col]['valid']
-        dict_score[col] = make_reg_score_dict(valid_y,y_pred,np.mean(train_y))
+        X = val['X']
+        y_actual = val['y']
+        y_pred = dict_rslt[col]
+        dict_score[col] = make_reg_score_dict(y_actual,y_pred,np.mean(y_actual))
         if print_rslt : print_reg_score_dict(col,dict_score[col])
     return dict_score
 
