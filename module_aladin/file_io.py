@@ -4,19 +4,23 @@ import pandas as pd
 
 ## FUNCTIONS - FILE I/O
 
-def chcek_and_mkdir(func):
+def check_and_mkdir(func):
     def wrapper(*args,**kwargs):
         if not os.path.exists(args[0]): os.mkdir(args[0])
         return func(*args,**kwargs)
     return wrapper
 
-@chcek_and_mkdir
+@check_and_mkdir
 def save_pkl(save_dir,file_name,save_object):
     if not os.path.exists(save_dir): os.mkdir(save_dir)
     file_path = os.path.join(save_dir,file_name)
     with open(file_path,'wb') as f:
         pickle.dump(save_object,f)
-        
+
+def load_pkl(file_path):
+    with open(file_path,'rb') as f:
+        data = pickle.dump(f)
+    return data
     
 def load_files(dir_path,file_list):
     file_type = list(set(map(lambda x : x.split('.')[-1],file_list)))
