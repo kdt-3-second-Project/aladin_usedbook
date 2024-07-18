@@ -79,7 +79,8 @@ def make_store_encode_map(store_data):
 import ipdb
 
 if __name__=='__main__':
-    file_name = 'data_splitted_ver{}.pkl'.format(0.8)
+    ver, strat = 0.8, False
+    file_name = 'data_splitted_ver{}_strat-{}.pkl'.format(ver,strat)
     file_path = os.path.join(RSLT_DIR,file_name)
     data = load_pkl(file_path)
     
@@ -175,7 +176,7 @@ if __name__=='__main__':
         X_encoded[mode] = X    
 
     print('complete encoding')
-    #scaling
+    #scaling : scaling 하는 과정에서 ItemId 제거 
     len_tknzed, len_scalar = sum(maxlens.values()), len(xcols_scalar)
     scale_partition = [(1,len_tknzed+1)]+[(len_tknzed+1+i,len_tknzed+2+i) for i in range(len_scalar)]
     scaler_list = [copy.deepcopy(MinMaxScaler()) for _ in scale_partition]
@@ -198,6 +199,6 @@ if __name__=='__main__':
     ver=0.8
     dir_path = os.path.join(RSLT_DIR,'model_input')
     for mode, x_scaled in X_scaled.items():
-        save_pkl(dir_path,'{}.v{}_X_{}.pkl'.format(data_type,ver,mode),x_scaled)
+        save_pkl(dir_path,'{}.v{}_st-{}_X_{}.pkl'.format(data_type,ver,strat,mode),x_scaled)
     for mode,sample in data.items(): 
-        save_pkl(dir_path,'{}.v{}_y_{}.pkl'.format(data_type,ver,mode),sample['y'])
+        save_pkl(dir_path,'{}.v{}_st-{}_y_{}.pkl'.format(data_type,ver,strat,mode),sample['y'].to_numpy())
