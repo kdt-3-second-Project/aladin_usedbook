@@ -25,6 +25,29 @@ def check_time_2_sleep(idx,num,rest_count):
         time.sleep(sleeping_time)
     return rest_count
 
+def get_usedinfo(book_id):
+    url = url_usedinfo.format(book_id) 
+    r = requests.get(url)
+    if r.status_code != 200: raise Exception('bad request')
+    html=r.text
+    soup=BeautifulSoup(html, 'lxml') #  BeautifulSoup 클래스의 인스턴스 생성
+    table = soup.select_one(base_table)
+
+    used_list = table.find_all('tr')
+    data,error_count = dict(), 0
+    if len(used_list) <= 1 : return data, error_count
+    for i in range(1,len(used_list)):
+        content = used_list[i]
+        try :
+            data[i] = {
+               key : func(content.select_one(selector))
+               for key,(selector,func) in selector_dict.items()
+            }
+        except: error_count += 1
+    if not data : raise Exception('all product in table raised error')
+    return data, error_count
+    
+
 def crawl_usedifo(id_list,work_type='range',num0=0, num1=None):
     data_dict,errored_item = dict(), dict()
     null_used, rest_count = list(), 0
@@ -36,30 +59,13 @@ def crawl_usedifo(id_list,work_type='range',num0=0, num1=None):
         work_target = id_list[num0::num1]
 
     for n,book_id in enumerate(tqdm(work_target)):
-        url = url_usedinfo.format(book_id) 
         rest_count = check_time_2_sleep(n,100,rest_count)
-        data = dict()
         try:
-            r = requests.get(url)
-            if r.status_code != 200: raise Exception('bad request')
-            html=r.text
-            soup=BeautifulSoup(html, 'lxml') #  BeautifulSoup 클래스의 인스턴스 생성
-            table = soup.select_one(base_table)
-
-            used_list = table.find_all('tr')
-            if len(used_list) <= 1 : null_used.append(book_id)
-            data,error_count = dict(), 0
-            for i in range(1,len(used_list)):
-                content = used_list[i]
-                try :
-                    data[i] = {
-                       key : func(content.select_one(selector))
-                       for key,(selector,func) in selector_dict.items()
-                    }
-                except: error_count += 1
-            if data : data_dict[book_id] = data
-            elif len(used_list) > 1 : raise Exception('all product in table raised error')
-            if error_count : raise Exception('some selector raised error')
+            used_data, error_count = get_usedinfo(book_id)
+            if used_data:
+                data_dict[book_id] = used_data
+                if error_count : raise Exception('some selector raised error')
+            else : null_used.append(book_id)
         except Exception as e:
             errored_item[book_id] = f'{class_name(e)}/{e}'
     
@@ -70,6 +76,7 @@ def crawl_usedifo(id_list,work_type='range',num0=0, num1=None):
 #    return df
 
 def process_datadict(data_dict,cols):
+    #수집한 datadict를 정해진 형식의 df로 바꿈
     data_df = nested_dict_to_df(data_dict)
     pvtb = pd.pivot_table(data=data_df,values=0,index=['level_0','level_1'],columns='level_2',aggfunc=list).reset_index(level=[1])
     if not check_pvtb_of_list(pvtb,cols): return pvtb, False

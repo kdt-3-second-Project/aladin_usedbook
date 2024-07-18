@@ -56,11 +56,3 @@ if __name__=='__main__':
     
     
     
-# encoding 파트로 옮기기    
-#    stores= usedbook_data['store'].value_counts().sort_values(ascending=False)
-#    store_encoding = {
-#        place : n+1
-#        for n,place in enumerate(stores.index)
-#    }
-#    rslt['store'] = usedbook_data['store'].map(store_encoding)
-#

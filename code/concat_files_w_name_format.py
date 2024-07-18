@@ -9,7 +9,7 @@ PRJCT_PATH = '/home/doeun/code/AI/ESTSOFT2024/workspace/2.project_text/aladin_us
 sys.path.append(PRJCT_PATH)
 
 from module_aladin.file_io import save_pkl
-from module_aladin.data_process import load_n_concatt
+from module_aladin.data_process import load_n_concat
     
 def prjct_config():
     parser = argparse.ArgumentParser()
@@ -38,7 +38,7 @@ def save_file(file,save_dir,file_name):
 if __name__=='__main__':
     file_path = prjct_config()
     dir_path,cand_list = detect_file_cand(file_path)
-    concatted_file = load_n_concatt(dir_path,cand_list)
+    concatted_file = load_n_concat(dir_path,cand_list)
     common_str = cand_list[0].split('_step')[0]
     save_file(concatted_file,os.path.join(dir_path,'concatted'),common_str+'_concatted') 
     

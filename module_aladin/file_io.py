@@ -29,11 +29,6 @@ def load_files(dir_path,file_list):
         assert len(file_type) == 1
     file_type = file_type[0]
     if file_type == 'pkl':
-        rslt = list()
-        for file in file_list:
-            file_path = os.path.join(dir_path,file)
-            with open(file_path,'rb') as f :
-                rslt.append(pickle.load(f))
-        return rslt
+        return [load_pkl(os.path.join(dir_path,file)) for file in file_list]
     if file_type == 'csv':     
         return [pd.read_csv(os.path.join(dir_path,file)) for file in file_list]

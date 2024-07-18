@@ -19,25 +19,29 @@ from tensorflow.keras.preprocessing.sequence import pad_sequences
 import itertools
 from sklearn.preprocessing import MinMaxScaler
 
-def set_maxlen(data,maxlen,mode):
-    #maxlen 이름 정리 필요
-    if maxlen == None : maxlen = len(data)
-    if maxlen > len(data) : maxlen = len(data)
+def set_corpus_size(freq,size_feat,mode):
+    # 입력받은 mode와 size_feat에 따라 size 크기 결정
     if mode == 'uniform':
-        cond = data['counts']>=data['counts'].iloc[maxlen]
-        maxlen = np.sum(cond)
+        cond = freq['counts']>=freq['counts'].iloc[size_feat]
+        size = np.sum(cond)
     elif mode =='ths':
-        cond = data[data['counts'] > maxlen]
-        maxlen = np.sum(cond)
-    return maxlen
+        cond = freq[freq['counts'] > size_feat]
+        size = np.sum(cond)
+    else :
+        if size_feat == None : size = len(freq)
+        elif size_feat > len(data) : size = len(freq)
+        else : size = size_feat
+    return size
 
-def make_encoding_by_freq(corpus,null_val='[PAD]',maxlen=None,mode=None):
-    df_corpus = pd.DataFrame(corpus).T
-    df_corpus = df_corpus.rename(columns={0:'token',1:'counts'})
-    temp = df_corpus.sort_values(by='counts',ascending=False)
-    maxlen = set_maxlen(temp,maxlen,mode)
-    temp = temp.iloc[:maxlen]
-    temp['val'] = np.arange(maxlen)+1
+def make_encoding_by_freq(freq,null_val='[PAD]',size_feat=None,mode=None):
+    #빈도수 기반 정수 인코딩 dict 만들기
+    # freq : token 별 등장 빈도 (value_count), size_feat : size관련 변수(max_size, ths등), mode : size 결정 방법
+    df_freq = pd.DataFrame(freq).T
+    df_freq = df_freq.rename(columns={0:'token',1:'counts'})
+    temp = df_freq.sort_values(by='counts',ascending=False)
+    size = set_corpus_size(temp,size_feat,mode)
+    temp = temp.iloc[:size]
+    temp['val'] = np.arange(size)+1
     temp2 = temp.set_index('token').to_dict()
     map_token_encode = temp2['val']
     map_token_encode[null_val]=0
@@ -46,6 +50,31 @@ def make_encoding_by_freq(corpus,null_val='[PAD]',maxlen=None,mode=None):
 def encode_tokens(map_token,x,oov=True):
     oov_val =max(map_token.values())+1 if oov else 0
     return map_token[x] if x in map_token else oov_val
+
+def make_author_encode_map(bookinfo,ths_author):
+    pvtb = pd.pivot_table(data=bookinfo,index='Author',values='SalesPoint',aggfunc=np.sum)
+    pvtb = pvtb.sort_values(by='SalesPoint',ascending=False)
+    author_top_k= pvtb[pvtb['SalesPoint']>=ths_author].index
+    encode_author = pd.DataFrame({'author' : author_top_k.values,'val':np.arange(1,len(author_top_k)+1)})
+    encode_author = encode_author.set_index('author')
+    return encode_author.to_dict()['val']
+
+def make_publshr_encode_map(publshr_data,ths_publshr):
+    stats = publshr_data.value_counts().sort_values(ascending=False)
+    top_k_val = stats.iloc[ths_publshr]
+    publshr_top_k = list(stats[stats >= top_k_val].index)
+    return {
+        publshr : n+1
+        for n,publshr in enumerate(publshr_top_k)
+    }
+    
+
+def make_store_encode_map(store_data):
+    stores= store_data.value_counts().sort_values(ascending=False)
+    return {
+        place : n+1
+        for n,place in enumerate(stores.index)
+    }
 
 if __name__=='__main__':
     file_name = 'data_splitted_ver{}.pkl'.format(0.8)
@@ -72,22 +101,22 @@ if __name__=='__main__':
         book_dict[mode] = bookinfo    
     
     #make encoding map
-    book_tknzed = book_dict['train'][cols_tknz].to_dict('series')
+    bookinfo = book_dict['train']
+    book_tknzed = bookinfo[cols_tknz].to_dict('series')
     book_name, book_subname, category = book_tknzed['BName'], book_tknzed['BName_sub'],book_tknzed['Category']
     tokens = np.array(list(itertools.chain(*book_name.values,*book_subname.values,*category.values)))
-    corpus = np.unique(tokens,return_counts=True)
-    map_token_encode = make_encoding_by_freq(corpus,maxlen=32000)
+    token_freq = np.unique(tokens,return_counts=True)
+
+    map_token_encode = make_encoding_by_freq(token_freq,size_feat=32000)
     encode_1line =lambda x: list(map(lambda y : encode_tokens(map_token_encode,y),x))
     
+    #아래 ths 는 EDA 결과 제가 자의적으로 정한 내용
     ths_author = np.round(len(book_name)/4500)*500
     ths_publshr = np.round(len(book_name)/4500)*30
-
-    pvtb = pd.pivot_table(data=bookinfo,index='Author',values='SalesPoint',aggfunc=np.sum)
-    pvtb = pvtb.sort_values(by='SalesPoint',ascending=False)
-    author_top_slspnt= pvtb[pvtb['SalesPoint']>=ths_author].index
-    encode_author = pd.DataFrame({'author' : author_top_slspnt.values,'val':np.arange(1,len(author_top_slspnt)+1)})
-    encode_author = encode_author.set_index('author')
-    map_author_encode=encode_author.to_dict()['val']
+    
+    map_author_encode = make_author_encode_map(bookinfo['Author'],ths_author)
+    map_publshr_encode = make_publshr_encode_map(bookinfo['Publshr'],ths_publshr)
+    map_store_encode = make_store_encode_map(data['train']['X']['store'])
     
     encode_maps = {
         'Author' : lambda x : encode_tokens(map_author_encode,x,oov=False),

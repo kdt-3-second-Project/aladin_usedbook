@@ -75,13 +75,3 @@ if __name__ == '__main__':
     file_name = 'bookinfo_ver{}.csv'.format(0.8)
     save_path = os.path.join(RSLT_DIR,file_name)
     rslt.to_csv(save_path,index=False)
-
-#encoding으로 옮겨야
-##출판사
-#k = 50
-#stats = bookinfo['Publshr'].value_counts().sort_values(ascending=False)
-#top_k_val = stats.iloc[k]
-#publs_top_k = list(stats[stats >= top_k_val].index)
-#cond_etc = ~(bookinfo['Publshr'].isin(publs_top_k))
-#bookinfo_processed.loc[cond_etc,'Publshr'] =  '기타 출판사'
-##top k 정하는 것은 완전 합본 후에 정해야 함

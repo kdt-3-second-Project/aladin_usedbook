@@ -17,6 +17,7 @@ def extract_author1(content:str):
     return erase_role(ele0)
 
 def clear_patterns(patterns:dict,sentence):
+    #pattern에 포함된 pat들을 sentence에서 지움
     for pat in patterns.values() :
         sentence = re.sub(pat,'',sentence).strip()
         sentence = re.sub(r'\s+',' ',sentence).strip()
@@ -29,6 +30,7 @@ def re_iter_to_rslt(re_iter):
     }
     
 def find_patterns(patterns,sentence):
+    #pattern에 포함된 pat 각각에 대하여, sentence에 포함된 부분 모두 추출
     return {
         key : re_iter_to_rslt(re.finditer(pat,sentence.strip()))
         for key,pat in patterns.items()
@@ -97,6 +99,7 @@ def check_adj(word,target,sign:bool):
     return False
 
 def translate_hanja(sentence):
+    #한자를 한글로 변환. 독음이 병기된 경우 독음만 남김
     #masking
     temp = erase_space(sentence)
     segs = list(split_hanja_custom(temp))
