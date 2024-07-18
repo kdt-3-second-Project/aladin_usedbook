@@ -19,7 +19,7 @@ def save_pkl(save_dir,file_name,save_object):
 
 def load_pkl(file_path):
     with open(file_path,'rb') as f:
-        data = pickle.dump(f)
+        data = pickle.load(f)
     return data
     
 def load_files(dir_path,file_list):

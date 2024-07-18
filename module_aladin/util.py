@@ -4,6 +4,8 @@ import pandas as pd
 from functools import wraps
 from sklearn.model_selection import train_test_split
 
+from module_aladin.data_process import concat_data
+
 def record_time(func):
     @wraps(func) 
     def wrapper(*args,**kwargs):
@@ -25,8 +27,6 @@ def class_name(clss):
 def train_test_split_strat(X:pd.DataFrame,y:pd.Series,strat=None,method='order',harsh=False,n_strata=10,**kwargs):
     # strat을 기준으로 균등하도록 train, test로 나눔
     # strat의 값을 n등분 하여 균등하게 할지, strat의 순서를 기준으로 균등하게 할지 입력 받음
-    type_x,type_y = type(X), type(y)
-    assert type_x == type_y 
     if strat is None : strat = y
     if method in ['quantile','order'] :
         p_arr = np.linspace(0,n_strata)/n_strata
@@ -55,8 +55,4 @@ def train_test_split_strat(X:pd.DataFrame,y:pd.Series,strat=None,method='order',
         else : x_ind, y_ind = 0, 2
         data[x_ind],data[y_ind] = lists_append_together([data[x_ind],data[y_ind]],[res_Xs[0],res_ys[0]])
     
-    if type_x == type(np.array([])) :
-        func1 = lambda x : x.reshape(len(x),-1)
-        func = lambda x : np.vstack(map(func1,x))
-    else : func = pd.concat
-    return tuple(map(func,data))
+    return tuple(map(concat_data,data))

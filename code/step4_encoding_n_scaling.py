@@ -48,7 +48,7 @@ def make_encoding_by_freq(freq,null_val='[PAD]',size_feat=None,mode=None):
     return map_token_encode
 
 def encode_tokens(map_token,x,oov=True):
-    oov_val =max(map_token.values())+1 if oov else 0
+    oov_val = len(map_token)+1 if oov else 0 
     return map_token[x] if x in map_token else oov_val
 
 def make_author_encode_map(bookinfo,ths_author):
@@ -75,6 +75,8 @@ def make_store_encode_map(store_data):
         place : n+1
         for n,place in enumerate(stores.index)
     }
+
+import ipdb
 
 if __name__=='__main__':
     file_name = 'data_splitted_ver{}.pkl'.format(0.8)
@@ -111,10 +113,10 @@ if __name__=='__main__':
     encode_1line =lambda x: list(map(lambda y : encode_tokens(map_token_encode,y),x))
     
     #아래 ths 는 EDA 결과 제가 자의적으로 정한 내용
-    ths_author = np.round(len(book_name)/4500)*500
-    ths_publshr = np.round(len(book_name)/4500)*30
+    ths_author = int(np.round(len(book_name)/500)*75)
+    ths_publshr = int(np.round(len(book_name)/500)*5)
     
-    map_author_encode = make_author_encode_map(bookinfo['Author'],ths_author)
+    map_author_encode = make_author_encode_map(bookinfo[['Author','SalesPoint']],ths_author)
     map_publshr_encode = make_publshr_encode_map(bookinfo['Publshr'],ths_publshr)
     map_store_encode = make_store_encode_map(data['train']['X']['store'])
     
@@ -139,15 +141,16 @@ if __name__=='__main__':
     
     #attach bookinfo to usedifo
     for mode,sample in data.items():
-        X_mode,bookinfo = sample['X'], book_dict[mode]
+        X_mode,bookinfo = sample['X'], book_dict[mode].set_index('ItemId')
         for col in book_cols:
             X_mode[col] = X_mode['ItemId'].apply(lambda x: bookinfo.loc[x,col])
         data[mode]['X'] = X_mode
     #pd concat 이나 join을 이용하는 것으로 바꿔야 함
+    print('complete attachment') 
     
     #encode X 
     X_encoded=dict()
-    for mode,sample in data.items():
+    for mode,sample in tqdm(data.items()):
         X_mode = sample['X']
         #padding and encoding
         encoded = pd.DataFrame(X_mode['ItemId']) 
@@ -157,8 +160,8 @@ if __name__=='__main__':
                                    value='[PAD]',dtype=object)
             encoded[col] = list(np.apply_along_axis(encode_1line,0,padded))
         #concat encoded
-        for col in cols_freq:
-            encoded[col] = X_mode['Author'].map(encode_maps[col])
+        for col in tqdm(cols_freq):
+            encoded[col] = X_mode[col].map(encode_maps[col])
         encoded['Pdate']= pd.to_datetime(X_mode['Pdate'],format='%Y-%m-%d')
         encoded['Pdate']= pd_datetime_2_datenum(encoded['Pdate'])
         cols_else = list(filter(lambda x : x not in encoded.columns,x_cols))
@@ -171,6 +174,7 @@ if __name__=='__main__':
         X = np.hstack((x_id,X))
         X_encoded[mode] = X    
 
+    print('complete encoding')
     #scaling
     len_tknzed, len_scalar = sum(maxlens.values()), len(xcols_scalar)
     scale_partition = [(1,len_tknzed+1)]+[(len_tknzed+1+i,len_tknzed+2+i) for i in range(len_scalar)]
@@ -188,6 +192,7 @@ if __name__=='__main__':
             intermid.append(sliced)
 
         X_scaled[mode] = np.hstack(intermid)
+    print('complete scaling')
     
     data_type = 'sample'
     ver=0.8

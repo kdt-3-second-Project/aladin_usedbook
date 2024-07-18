@@ -57,7 +57,7 @@ if __name__ == '__main__':
 
     cols = ['Rank','BName','ItemId','Author',
            'Publshr','Pdate','RglPrice','SlsPrice','SalesPoint',
-           'Category','Sorce'] 
+           'Category','Source'] 
     rslt = bookinfo.copy()[cols]
 
     #도서명

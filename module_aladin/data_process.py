@@ -40,9 +40,13 @@ def concat_dict(dict1,dict2):
 def concat_data(data_list):
     data_type = list(set(map(type,data_list))) 
     assert len(data_type) == 1
-    file_type = file_type[0]
-    if data_type == pd.DataFrame :
+    data_type = data_type[0]
+    if data_type in [type(pd.DataFrame()),type(pd.Series())] :
         rslt = pd.concat(data_list)
+    elif data_type == type(np.array([])) :
+        func1 = lambda x : x.reshape(len(x),-1)
+        func = lambda x : np.vstack(map(func1,x))
+        rslt = func(data_list)
     elif data_type == list :
         rslt = functools.reduce(lambda x,y : x+y,data_list)
     elif data_type == dict :
