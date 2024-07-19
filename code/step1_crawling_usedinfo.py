@@ -18,12 +18,13 @@ from module_aladin.file_io import save_pkl
 
 save_dir = 'processed'
 
-def check_time_2_sleep(idx,num,rest_count):
+def check_time_2_sleep(idx,num,rest_count,rest_total):
     if idx % (num+random.uniform(0,5)) == 1 :
-        rest_count,sleeping_time = rest_count+1, (random.uniform(1,3))/2
+        rest_count,sleeping_time = rest_count+1, (random.uniform(1,3))/10
         print('time to rest **^^** : ',rest_count," | ",sleeping_time)
         time.sleep(sleeping_time)
-    return rest_count
+        rest_total += sleeping_time
+    return rest_count,rest_total
 
 def get_usedinfo(book_id):
     url = url_usedinfo.format(book_id) 
@@ -48,9 +49,9 @@ def get_usedinfo(book_id):
     return data, error_count
     
 
-def crawl_usedifo(id_list,work_type='range',num0=0, num1=None):
+def crawl_usedifo(id_list,work_type='step',num0=0, num1=None):
     data_dict,errored_item = dict(), dict()
-    null_used, rest_count = list(), 0
+    null_used, rest_count, rest_total = list(), 0, 0 
     if work_type=='range':
         if num1 is None : num1 = len(id_list)
         work_target = id_list[num0:num1]
@@ -59,7 +60,7 @@ def crawl_usedifo(id_list,work_type='range',num0=0, num1=None):
         work_target = id_list[num0::num1]
 
     for n,book_id in enumerate(tqdm(work_target)):
-        rest_count = check_time_2_sleep(n,100,rest_count)
+        rest_count,rest_total = check_time_2_sleep(n,30,rest_count,rest_total)
         try:
             used_data, error_count = get_usedinfo(book_id)
             if used_data:
@@ -68,6 +69,9 @@ def crawl_usedifo(id_list,work_type='range',num0=0, num1=None):
             else : null_used.append(book_id)
         except Exception as e:
             errored_item[book_id] = f'{class_name(e)}/{e}'
+    
+    print('work done : {} | {} | {}'.format(*work_info))
+    print('rested time : {} times, {}(sec)'.format(rest_count,rest_total))
     
     return data_dict, errored_item, null_used
 
@@ -85,7 +89,7 @@ def process_datadict(data_dict,cols):
 
 def prjct_config():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--work_type','-t',default='worker')
+    parser.add_argument('--work_type','-t',default='step')
     parser.add_argument('--work_feat','-n',default=None)
     parser.add_argument('--start_idx','-i',default=0)
     parser.add_argument('--file_path','-f',default=None)
@@ -111,8 +115,10 @@ if __name__ =='__main__':
     if not flag : print('error occured when making pivot table')
     pvtb = pvtb.rename(columns={"level_1":"used_idx"})
 
-    #save rslts    
-    save_dir = os.path.join(PRJCT_PATH,'processed','usedbook_data')
+    #save rslts
+    work_name = '.'.join(file_name.split('.')[:-1])
+    save_dir = os.path.join(PRJCT_PATH,'processed','usedbook_data','intermid',work_name)
+    if not os.path.exists(save_dir) : os.mkdir(save_dir)
     #usedproduct
     pvtb_name = 'usedproduct_{}_{}_{}_{}.csv'.format(file_name[:-4],*work_info)
     save_path = os.path.join(save_dir,pvtb_name)

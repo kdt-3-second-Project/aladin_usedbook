@@ -14,18 +14,24 @@ from module_aladin.data_process import load_n_concat
 def prjct_config():
     parser = argparse.ArgumentParser()
     parser.add_argument('--file_path','-f',default=None)
+    parser.add_argument('--concat_mode','-c',default='harsh')
+    parser.add_argument('--save_path','-s',default=None)
     args = parser.parse_args()
     
     file_path = args.file_path
-    return file_path
+    concat_mode = args.concat_mode
+    save_path = args.save_path
+    return file_path,concat_mode,save_path
 
-def detect_file_cand(file_path):
+def detect_file_cand(file_path, concat_mode='harsh'):
     dir_path, file_name = os.path.split(file_path)
     all_file = natsort.natsorted(os.listdir(dir_path))
     common_str = file_name.split('_step')[0]
-    file_type = file_name.split('_')[-1]
+    if concat_mode == 'harsh' : abstract_func = lambda x : x.split('_')[-1]
+    else :  abstract_func = lambda x : x.split('.')[-1]
+    file_type = abstract_func(file_name)
     file_cand = list(filter(lambda x: common_str in x,all_file))
-    return dir_path,list(filter(lambda x : x.split('_')[-1]==file_type,file_cand))
+    return dir_path,list(filter(lambda x : abstract_func(x)==file_type,file_cand))
 
 def save_file(file,save_dir,file_name):
     if type(file) == pd.DataFrame :
@@ -36,9 +42,14 @@ def save_file(file,save_dir,file_name):
         save_pkl(save_dir,file_name+'.pkl',file)        
 
 if __name__=='__main__':
-    file_path = prjct_config()
-    dir_path,cand_list = detect_file_cand(file_path)
+    file_path, concat_mode, save_path = prjct_config()
+    dir_path,cand_list = detect_file_cand(file_path,concat_mode)
     concatted_file = load_n_concat(dir_path,cand_list)
+    print(f'{len(cand_list)} files concatted')
     common_str = cand_list[0].split('_step')[0]
-    save_file(concatted_file,os.path.join(dir_path,'concatted'),common_str+'_concatted') 
+    if save_path is None :
+        if 'intermid' in dir_path : base_path = dir_path.split('intermid')[0]
+        else : base_path = os.path.join(dir_path,'../')
+        save_path = os.path.join(base_path,'concatted')
+    save_file(concatted_file,save_path,common_str+'_concatted') 
     
