@@ -5,80 +5,33 @@ import os, sys, pickle, argparse
 import functools
 import ipdb
 
-def save_pkl(save_dir,file_name,save_object):
-    if not os.path.exists(save_dir): os.mkdir(save_dir)
-    file_path = os.path.join(save_dir,file_name)
-    with open(file_path,'wb') as f:
-        pickle.dump(save_object,f)
+PRJCT_PATH = '/home/doeun/code/AI/ESTSOFT2024/workspace/2.project_text/aladin_usedbook'
+sys.path.append(PRJCT_PATH)
 
+from module_aladin.file_io import save_pkl
+from module_aladin.data_process import load_n_concat
     
 def prjct_config():
     parser = argparse.ArgumentParser()
     parser.add_argument('--file_path','-f',default=None)
+    parser.add_argument('--concat_mode','-c',default='harsh')
+    parser.add_argument('--save_path','-s',default=None)
     args = parser.parse_args()
     
     file_path = args.file_path
-    return file_path
+    concat_mode = args.concat_mode
+    save_path = args.save_path
+    return file_path,concat_mode,save_path
 
-def detect_file_cand(file_path):
+def detect_file_cand(file_path, concat_mode='harsh'):
     dir_path, file_name = os.path.split(file_path)
     all_file = natsort.natsorted(os.listdir(dir_path))
     common_str = file_name.split('_step')[0]
-    file_type = file_name.split('_')[-1]
+    if concat_mode == 'harsh' : abstract_func = lambda x : x.split('_')[-1]
+    else :  abstract_func = lambda x : x.split('.')[-1]
+    file_type = abstract_func(file_name)
     file_cand = list(filter(lambda x: common_str in x,all_file))
-    return dir_path,list(filter(lambda x : x.split('_')[-1]==file_type,file_cand))
-
-def load_files(dir_path,file_list):
-    file_type = list(set(map(lambda x : x.split('.')[-1],file_list)))
-    if len(file_type) != 1 :
-        print(file_type)
-        assert len(file_type) == 1
-    file_type = file_type[0]
-    if file_type == 'pkl':
-        rslt = list()
-        for file in file_list:
-            file_path = os.path.join(dir_path,file)
-            with open(file_path,'rb') as f :
-                rslt.append(pickle.load(f))
-        return rslt
-    if file_type == 'csv':     
-        return [pd.read_csv(os.path.join(dir_path,file)) for file in file_list]
-
-def concat_dict(dict1,dict2):
-    key1, key2 = set(dict1.keys()), set(dict2.keys())
-    common_keys = key1.intersection(key2)
-    key1_only = key1.difference(key2)
-    key2_only = key2.difference(key1)
-    rslt = dict()
-    if len(common_keys)==0:
-        for key,val in dict1.items():
-            rslt[key] = val
-        for key,val in dict2.items():
-            rslt[key] = val
-    else :
-        for key in key1_only:
-            rslt[key] = [dict1[key]] 
-        for key in key2_only:
-            rslt[key] = [dict2[key]]
-        for key in common_keys : 
-            rslt[key] = [dict1[key],dict2[key]]
-    return rslt 
-
-def concat_files(file_list):
-    file_type = list(set(map(type,file_list))) 
-    assert len(file_type) == 1
-    file_type = file_type[0]
-    if file_type == pd.DataFrame :
-        rslt = pd.concat(file_list)
-    elif file_type == list :
-        rslt = functools.reduce(lambda x,y : x+y,file_list)
-    elif file_type == dict :
-        rslt = functools.reduce(concat_dict,file_list)
-    return rslt
-
-def load_n_concatt(dir_path,file_list):
-    loaded_files = load_files(dir_path,file_list)
-    return concat_files(loaded_files)    
+    return dir_path,list(filter(lambda x : abstract_func(x)==file_type,file_cand))
 
 def save_file(file,save_dir,file_name):
     if type(file) == pd.DataFrame :
@@ -89,10 +42,14 @@ def save_file(file,save_dir,file_name):
         save_pkl(save_dir,file_name+'.pkl',file)        
 
 if __name__=='__main__':
-    file_path = prjct_config()
-#    ipdb.set_trace()
-    dir_path,cand_list = detect_file_cand(file_path)
-    concatted_file = load_n_concatt(dir_path,cand_list)
+    file_path, concat_mode, save_path = prjct_config()
+    dir_path,cand_list = detect_file_cand(file_path,concat_mode)
+    concatted_file = load_n_concat(dir_path,cand_list)
+    print(f'{len(cand_list)} files concatted')
     common_str = cand_list[0].split('_step')[0]
-    save_file(concatted_file,os.path.join(dir_path,'concatted'),common_str+'_concatted') 
+    if save_path is None :
+        if 'intermid' in dir_path : base_path = dir_path.split('intermid')[0]
+        else : base_path = os.path.join(dir_path,'../')
+        save_path = os.path.join(base_path,'concatted')
+    save_file(concatted_file,save_path,common_str+'_concatted') 
     
