@@ -28,7 +28,8 @@ col_name_dict= {
     '마일리지' : 'Mileage',
     '세일즈포인트' : 'SalesPoint',
     '대표분류(대분류명)' : 'Category',
-    'source' : 'Source'
+    'source' : 'Source',
+    '날짜' : 'Source'
 }
 
 #NLP

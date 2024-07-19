@@ -21,8 +21,8 @@ quality_dict= {
 
 if __name__=='__main__':
     save_dir = 'processed/usedbook_data/concatted'
-    date = 240711
-    file_name = f'usedproduct_unused_filtered_{date}_concatted.csv'
+    base_file = 'bestseller_cleaned_240718'
+    file_name = f'usedproduct_{base_file}_concatted.csv'
 
     file_path = os.path.join(PRJCT_PATH,save_dir,file_name)
     usedinfo = pd.read_csv(file_path)
@@ -53,7 +53,7 @@ if __name__=='__main__':
         'val':{'X': X_val, 'y': y_val},
         'test':{'X': X_test, 'y': y_test},
     }
-    ver = 0.8
+    ver = 1.0
     file_name = 'data_splitted_ver{}_strat-{}.pkl'.format(ver,strat)
     save_pkl(RSLT_DIR,file_name,data_dict)
     

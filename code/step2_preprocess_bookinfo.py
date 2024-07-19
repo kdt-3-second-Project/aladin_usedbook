@@ -48,9 +48,10 @@ def process_authors(authors):
     return authors, authors_mul    
 
 if __name__ == '__main__':
-    date = 240711
-    file_name = f'unused_filtered_{date}.csv'
-
+    date = 240718
+    #file_name = f'unused_filtered_{date}.csv'
+    file_name = f'bestseller_cleaned_{date}.csv'
+    
     bookdata_path = os.path.join(RSLT_DIR,file_name)
     bookinfo = pd.read_csv(bookdata_path)
     bookinfo = bookinfo.rename(columns=col_name_dict)
@@ -58,7 +59,9 @@ if __name__ == '__main__':
     cols = ['Rank','BName','ItemId','Author',
            'Publshr','Pdate','RglPrice','SlsPrice','SalesPoint',
            'Category','Source'] 
-    rslt = bookinfo.copy()[cols]
+    cols_in = list(filter(lambda x : x in bookinfo.columns,cols))
+    
+    rslt = bookinfo.copy()[cols_in]
 
     #도서명
     rslt['BName'],rslt['BName_sub'] = process_bookname(bookinfo['BName'])
@@ -67,11 +70,11 @@ if __name__ == '__main__':
     rslt['Author'],rslt['Author_mul'] = process_authors(bookinfo['Author'])
 
     #순서 정리
-    new_cols = cols.copy()
+    new_cols = cols_in.copy()
     new_cols.insert(4,'Author_mul')
     new_cols.insert(2,'BName_sub')
     rslt = rslt[new_cols]
 
-    file_name = 'bookinfo_ver{}.csv'.format(0.8)
+    file_name = 'bookinfo_ver{}.csv'.format(1.0)
     save_path = os.path.join(RSLT_DIR,file_name)
     rslt.to_csv(save_path,index=False)

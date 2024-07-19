@@ -79,12 +79,12 @@ def make_store_encode_map(store_data):
 import ipdb
 
 if __name__=='__main__':
-    ver, strat = 0.8, False
+    ver, strat = 1.0, False
     file_name = 'data_splitted_ver{}_strat-{}.pkl'.format(ver,strat)
     file_path = os.path.join(RSLT_DIR,file_name)
     data = load_pkl(file_path)
     
-    file_name = 'bookinfo_ver{}.csv'.format(0.8)
+    file_name = 'bookinfo_ver{}.csv'.format(1.0)
     file_path = os.path.join(RSLT_DIR,file_name)
     bookinfo = pd.read_csv(file_path)
     
@@ -195,8 +195,8 @@ if __name__=='__main__':
         X_scaled[mode] = np.hstack(intermid)
     print('complete scaling')
     
-    data_type = 'sample'
-    ver=0.8
+    data_type = 'whole'
+    ver=1.0
     dir_path = os.path.join(RSLT_DIR,'model_input')
     for mode, x_scaled in X_scaled.items():
         save_pkl(dir_path,'{}.v{}_st-{}_X_{}.pkl'.format(data_type,ver,strat,mode),x_scaled)
