@@ -1,6 +1,7 @@
 # 알라딘 중고책 데이터 기반으로 한 국내 중고서적 가격예측 AI모델
 --------
 프로젝트 구성원: 오도은, 박예림, 이준성, 정홍섭
+
 **사용된 스킬 셋**: NumPy, Pandas, Matplotlib, Scikit-learn, xgboost, mecab
 
 ## 1. 프로젝트 개요
