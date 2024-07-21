@@ -1,3 +1,8 @@
+/processed/**/*.pkl
+/processed/**/*.csv
+/processed/**/*.pkl
+/learning_material
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

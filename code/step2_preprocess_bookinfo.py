@@ -69,6 +69,12 @@ if __name__ == '__main__':
     #저자명
     rslt['Author'],rslt['Author_mul'] = process_authors(bookinfo['Author'])
 
+    #가격
+    price_col = ['RglPrice','SlsPrice']
+    for col in price_col :
+        if bookinfo[col].dtype == object:
+            rslt[col] = bookinfo[col].apply(erase_num_comma)
+    
     #순서 정리
     new_cols = cols_in.copy()
     new_cols.insert(4,'Author_mul')
