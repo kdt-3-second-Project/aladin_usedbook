@@ -23,7 +23,7 @@
 ![image](https://github.com/user-attachments/assets/e330ca44-893c-4fad-8d91-4a2f520c13af)
 
 
-  - [알라딘 온라인 중고서적]
+  - [알라딘 온라인 중고서적](https://www.aladin.co.kr/shop/UsedShop/wuseditemall.aspx?ItemId=254468327&TabType=3&Fix=1)
   - 중고서적에 대한 정보들을 크롤링으로 얻을 수 있음.
     ![image](https://github.com/user-attachments/assets/e8840608-96f8-47e6-954b-5d6e08f47df9)
 
@@ -40,7 +40,7 @@
 
 
 - 위 2개의 데이터를 바탕으로 하나의 raw data 파일을 얻을수 있었음
-  - column은 책이름,ISBN13,부가기호, quality, store(지점) , ItemId, 저자 ,출판사, 출판일, 정가, 판매가, 중고가,마일리지, 세일즈포인트, 카테고리,날짜로 총 12개가 있음.
+  - column은 책이름,[ISBN13,부가기호,](https://blog.aladin.co.kr/ybkpsy/959340) quality, store(지점) , ItemId, 저자 ,출판사, 출판일, 정가, 판매가, 중고가,마일리지, 세일즈포인트, 카테고리,날짜로 총 12개가 있음.
     - 카테고리는 외국어, 종교,사회과학, 건강/취미 등 총 24개 유형으로 분류됨
     - **세일즈포인트**
       - **판매량과 판매기간에 근거하여 해당 상품의 판매도를 산출한 알라딘만의 판매지수법**
@@ -106,7 +106,7 @@
 
 - [인코딩 및 스케일링](https://github.com/kdt-3-second-Project/aladin_usedbook/blob/e40008549c28f741bf72596828fa9913f60399fd/research/240716_encoding_bookinfo.ipynb)
   - Mecab을 사용해 Category, BName,BName_sub 컬럼을 토큰화
-    - Mecab은 원문 내 띄어쓰기에 의존하기보다 사전을 참조해 어휘를 구분하여 안정적인 결과값을 보여줌
+    - [Mecab](https://elsboo.tistory.com/44)은 원문 내 띄어쓰기에 의존하기보다 사전을 참조해 어휘를 구분하여 안정적인 결과값을 보여줌
   - 저자, 출판사, 지점 인코딩 / 텍스트 열 패딩후 출판 날짜 인코딩
   - train 데이터는 scaler 학습 및 변환, val 및 test 데이터는 학습된 scaler로 변환
 
