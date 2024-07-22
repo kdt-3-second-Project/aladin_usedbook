@@ -102,7 +102,7 @@
 - 중고 목록 전처리
   - 이상치 처리: 균일가, 하는 [하]로 통일
     - 총 등급은 [최상,상,중,하]로 구분
-  - 배달료 처리: 2500원으로 통일되어 있어 삭
+  - 배달료 처리: 2500원으로 통일되어 있어 삭제
 
 - [인코딩 및 스케일링](https://github.com/kdt-3-second-Project/aladin_usedbook/blob/e40008549c28f741bf72596828fa9913f60399fd/research/240716_encoding_bookinfo.ipynb)
   - Mecab을 사용해 Category, BName,BName_sub 컬럼을 토큰화
