@@ -62,13 +62,13 @@
 **문제**: 품질, 지점, 저자, 출판사, 출판일, 정가등 관련있는 항목 데이터중 중고서적 가격에 영향끼치는 것을 분석 및 예측 하고자 함
 
 ### 1) 실험 설계
-- sklearn.train_test_split을 사용하여 train 80%, test 20% 비율로, ItemId값의 범 기준으로 층화해 분리
+- sklearn.train_test_split을 사용하여 train 80%, test 20% 비율로, ItemId값의 범위위 기준으로 층화해 분리
 - 모델 종류 별 비교
     - Random Forest, XGBoost, MLP, RNN 모델 간의 성능을 비교
     - Random Forest, XGBoost, MLP, RNN
       - 독립변수로 사용한 기타 통계 항목(이하 참고 항목)은 데이터 셋에 포함된 다른 통계 항목.
     - Random Forest, XGBoost, MLP 학습을 할 때 grid search를 이용해 각 모델 별로 가장 높은 성능을 내는 hyper parameter 탐색
-    - 모든 모델의 성능을 비교하고, rmse,mape,mase,r2_score의 회귀 평가 지표를 사용하여 성능을 분
+    - 모든 모델의 성능을 비교하고, rmse,mape,mase,r2_score의 회귀 평가 지표를 사용하여 성능을 분석
 ### 2) 참고 창목 설정
 - 종속변수를 제외한 통계 항목 중에서 독립변수 선정
 - 도메인 지식을 활용하여 종속 변수 별로 해당하는 통계 항목 선별
