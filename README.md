@@ -131,8 +131,9 @@
 
      ![image](https://github.com/user-attachments/assets/abd08aad-d821-4979-9829-3080b950c32a)
       *그림. RFR 모델 정가 제외한 경우
-
+--------
   - XGBoost
+    
     ![image](https://github.com/user-attachments/assets/e2f0a3e1-0c9f-4b34-b65a-43c0eedf0ad7)
       
     *그림. XGBoost 모델 hyperparmeter: default*
@@ -144,15 +145,19 @@
 ------
 
 ## 6. 결과 분석
+- 가장 성능이 좋았던 분석 모델은 XGBoost에 default hyperparmter 기준 성능지표가 R2_score=0.95, mape=0.08, rmse=811임.
+- feature importance 분석 결과를 바탕으로 하여 중고가 예측에 RglPrice, BName_sub, quality이 주요한 역할을 하는 것을 확인
+- RglPrice를 포함하지 않았을 때 예측 성능이 많이 떨어지는 것을 발견
+- RMSE, MAPE, R2_score 등의 공통적인 경향 및 각 성능 지표의 차이점에 대해 생각해볼 수 있었음
 ------
 
 ## 7. 결론 및 향후 연구
 ------
 ### 결론
- • Random Forest regressor 및 XGBoost 등 간단한 모델로도 높은 성능의 모델 개발 가능
- • 도서 명, 중고 등급, 정가, 출판일, 저자 등 중고 도서에서 직접 확인 가능한 특징만으로도 충분히 가능
- • train set에서 중고 시세를 학습한 적 없는 중고 매물에 대해서도 높은 성능으로 예측
- • 알라딘에서 중고 도서의 공식 판매 가격을 산정하는 가이드라인이 있을 것이라 추측 가능
+ - Random Forest regressor 및 XGBoost 등 간단한 모델로도 높은 성능의 모델 개발 가능
+ - 도서 명, 중고 등급, 정가, 출판일, 저자 등 중고 도서에서 직접 확인 가능한 특징만으로도 충분히 가능
+ - train set에서 중고 시세를 학습한 적 없는 중고 매물에 대해서도 높은 성능으로 예측
+ - 알라딘에서 중고 도서의 공식 판매 가격을 산정하는 가이드라인이 있을 것이라 추측 가능
 
 ### 추후과제
 - 배포 가능한 알라딘 중고도서 데이터 셋으로 확장
