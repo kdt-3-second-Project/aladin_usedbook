@@ -163,7 +163,10 @@ if __name__=='__main__':
         #concat encoded
         for col in tqdm(cols_freq):
             encoded[col] = X_mode[col].map(encode_maps[col])
-        encoded['Pdate']= pd.to_datetime(X_mode['Pdate'],format='%Y-%m-%d')
+        X_mode['Pdate'] = X_mode['Pdate'].astype(str)
+#        date_format = '%Y-%m-%d'
+        date_format = '%Y%m%d'
+        encoded['Pdate']= pd.to_datetime(X_mode['Pdate'],format=date_format)
         encoded['Pdate']= pd_datetime_2_datenum(encoded['Pdate'])
         cols_else = list(filter(lambda x : x not in encoded.columns,x_cols))
         encoded[cols_else] = X_mode[cols_else]
