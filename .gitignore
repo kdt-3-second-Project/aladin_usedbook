@@ -1,7 +1,7 @@
-/processed/**/*.pkl
-/processed/**/*.csv
-/processed/**/*.pkl
-/learning_material
+#/processed/**/*.pkl
+#/processed/**/*.csv
+#/processed/**/*.pkl
+#/learning_material
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
