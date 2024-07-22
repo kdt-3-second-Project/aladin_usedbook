@@ -23,7 +23,7 @@
 - 알라딘의 중고 상품과 새 책 사이에 url 구조 등을 바탕으로 구별할 수 없지만, 알라딘에서 도서별로 중고 상품을 정리해 놓은 페이지를 제공하는 것을 이용하여 데이터 셋을 체계적으로 구축
 
 #### [알라딘 국내도서 주간베스트셀러](https://www.aladin.co.kr/shop/common/wbest.aspx?BranchType=1)
-- 알라딘 사이트 내 주간 베스트셀러 1~1000위에 대한 데이터를 xls 파일로 제공
+- 알라딘의 주간 베스트셀러 페이지에서 1~1000위에 대한 데이터를 xls 파일로 제공
 
 ![image](https://github.com/user-attachments/assets/e330ca44-893c-4fad-8d91-4a2f520c13af)
 
@@ -59,7 +59,6 @@
       - 같은 품질이라도 가격이 다르거나, 낮은 품질의 매물보다 더 가격이 싼 경우가 종종 있음
 
 ![image](https://github.com/user-attachments/assets/caa98ef5-b5be-47d9-a9c4-9ff236ecdb48)
-*참고 항목*
 
 ## 4. 문제 설정
 
@@ -68,19 +67,21 @@
 ### 1) 종속 변수/ 독립 변수
 
 - 종속 변수를 제외한 항목 중에서 독립변수 선정
-  - BName_sub (도서명에서 괄호 안의 내용), Author_mul (복수의 저자가 참여했는지 여부) 등 파생 항목 포함
+  - BName_sub (도서명에서 괄호 안의 내용), Author_mul (저자 등이 여러 명으로 표기되었는지 여부) 등 파생 항목 포함
 
 | 종속 변수 | 독립 변수 |
 |---------|---------|
-| Price (중고가)| ItemId, quality, store, BName, BName_sub, Author, Author_mul, Publshr (출판사), Pdate (출판일), RglPrice (정가), SlsPrice (새 책 판매가), Category |
+| Price | ItemId, quality, store, BName, BName_sub, Author, Author_mul, Publshr, Pdate, RglPrice, SlsPrice, Category |
 
 ### 1) 실험 설계
 
-- sklearn.train_test_split을 사용하여 train 64%, validation 16%, test 20% 비율로 분리
-- 모델 종류 별 비교
+- sklearn을 이용하여 train 64%, validation 16%, test 20% 비율로 분리
+- 크게 세 가지 측면으로 실험 진행
   - Random Forest, XGBoost 모델 간의 성능을 비교
-  - Random Forest, XGBoost, MLP 학습을 할 때 grid search를 이용해 각 모델 별로 가장 높은 성능을 내는 hyper parameter 탐색
-  - RMSE, MAPE, MASE, R2 Score 등의 회귀 평가 지표를 사용하여 성능을 각 모델 별로 분석
+    - Grid search를 이용해 각 모델 별로 가장 높은 성능을 내는 hyper parameter 탐색
+  - 판매가와 SalesPoint를 학습에서 제외시켜도 안정적인 성능이 나오는지 탐색
+  - test set을 train set에 포함되지 않았던 도서들에 대한 중고 매물로 한정지었을 때, 성능이 어떻게 달라지는지 탐색
+- RMSE, MAPE, MASE, R2 Score 등의 회귀 평가 지표를 사용하여 성능을 각 모델 별로 분석
 
 ## 5. [전처리](./code/)
 
@@ -130,68 +131,79 @@
   - 하나의 코퍼스에 해당하는 도서 명과 카테고리 관련 열은 일괄적으로 진행
   - 이외의 열은 개별적으로 진행
 
-![image](https://github.com/user-attachments/assets/f4a98000-345b-4695-a2e8-0fbfff784d68)  *그림. 전처리,스케일링후 최종 데이터 예시*
+![image](https://github.com/user-attachments/assets/f4a98000-345b-4695-a2e8-0fbfff784d68)
 
-![image](https://github.com/user-attachments/assets/251df1b2-ce2d-41a2-a1bb-4b8517ba8771) *그림. train셋의 평균을 baseline으로 했을 때, Random Forest Regressor 적용 결과 분석 예시(실제 및 예측값 분포/오차의 분포/성능 지표)*
+*그림. 전처리,스케일링후 최종 데이터 예시*
+
+![image](https://github.com/user-attachments/assets/251df1b2-ce2d-41a2-a1bb-4b8517ba8771)
+
+*그림. train셋의 평균을 baseline으로 했을 때, Random Forest Regressor 적용 결과 분석 예시(실제 및 예측값 분포/오차의 분포/성능 지표)*
 
 ## 5. 모델 학습 결과 및 평가
 
-- 모델 성능은 RMSE, MAPE, score 등을 활용하여 평가
+- 모델 성능은 RMSE, MAPE, R2 Score 등을 활용하여 평가
   - Random Forest Regressor
      ![image](https://github.com/user-attachments/assets/fce0e86d-818d-4a15-a659-b9eae4fce201)
+
       *그림. RFR 모델 hyperparmeter: default, sample data의 feature importance*
-    - test set을 train set에 포함된 적 없는 책에 대한 중고매물로 꾸린 경우
+
+    - train set에 포함된 적 없는 종류의 책에 대한 중고 매물에 대해서만 평가한 경우
+
      ![image](https://github.com/user-attachments/assets/5a47472e-c124-44a7-92ca-9abdaac7fc95)
+
       *그림. RFR 모델 salespoint를 제외한 경우
+
      ![image](https://github.com/user-attachments/assets/abd08aad-d821-4979-9829-3080b950c32a)
+
       *그림. RFR 모델 정가 제외한 경우
+
   - XGBoost
     ![image](https://github.com/user-attachments/assets/e2f0a3e1-0c9f-4b34-b65a-43c0eedf0ad7)
+
     *그림. XGBoost 모델 hyperparmeter: default*
+
     - test set을 train set에 포함된 적 없는 책에 대한 중고매물로 꾸린 경우
+
       ![image](https://github.com/user-attachments/assets/851c1c21-6e9c-4aec-9910-fe892b22700e)
+
         *그림. XGBoost*
 
 ## 6. 결과 분석
 
 - 가장 성능이 좋았던 분석 모델은 default hyperparmter 설정의 XGBoost 모델
-  - 성능지표가 R2_score=0.95, mape=0.08, rmse=811
-  - validation 및 test set에서 성적이 더 잘 나오는 hyperparmeter 설정도 있었지만, 
+  - R2_score=0.95, mape=0.08, rmse=811
+  - GridSearch 결과, validation 및 test set에서 성적이 더 잘 나오는 hyperparmeter 설정도 있었음
+  - 하지만 train set에서 등장하지 않았던 도서의 경우엔 hyperparameter가 default인 경우에 더 안정적인 성능을 보임
+  - 어떤 경우에서도 base line(train set에서의 평균값)에 비해 월등히 좋은 성능을 보임
 - feature importance 분석 결과를 바탕으로 중고가 예측에 정가, 도서 명, 중고 등급 등이 주요한 역할을 하는 것을 확인
-- 정가를 포함하지 않았을 때 예측 성능이 많이 떨어지는 것을 발견
-- RMSE, MAPE, R2_score 등 다양한 성능 지표의 공통적인 경향 및 각각의 특징에 대해 생각해볼 수 있었음
+- 정가를 학습 데이터에 포함하지 않았을 때, train set에 등장 한 적 없는 종류의 도서에 대해서는 중고 판매가 예측 성능이 많이 떨어지는 것을 발견
 
-## 7. 결론 및 향후 연구
+## 7. 결론 및 한계
 
 ### 결론
 
 - Random Forest regressor 및 XGBoost 등 간단한 모델로도 높은 성능의 모델 개발 가능
-- 도서 명, 중고 등급, 정가, 출판일, 저자 등 중고 도서에서 직접 확인 가능한 특징만으로도 충분히 가능
+- 도서 명, 중고 등급, 정가, 출판일, 저자 등 중고 도서에서 직접 확인 가능한 특징만으로도 높은 성능이 충분히 가능
 - train set에서 중고 시세를 학습한 적 없는 중고 매물에 대해서도 높은 성능으로 예측
 - 알라딘에서 중고 도서의 공식 판매 가격을 산정하는 가이드라인이 있을 것이라 추측 가능
 
-### 추후과제
+### 한계 평가
 
-- 배포 가능한 알라딘 중고도서 데이터 셋으로 확장
-
-- 중고 판매가 외에 다른 값을 예측하는 다양한 모델 개발 가능
-    • 도서 정보 및 중고 시장에서의 가격을 바탕으로 알라딘이 산정한 SalesPoint 추정
-    • 카테고리와 도서 명, 출판사 등의 정보로 출간 연도 예측
-
-- 베스트 셀러 이외의 도서, 공식 매점에서 판매하지 않는 도서 등으로 프로젝트 확장
-
-## 8. 한계점
-
-- 베스트 셀러 목록에 포함된 도서를 대상으로 제한
-  - 베스트 셀러에 포함된 적 없는 도서도 대상으로 하기 위한 크롤링 방법 연구 필요
-- RNN 등을 이용한 모델 개발의 실패
-  - hyperparameter, optimizer 등을 조정 해봤지만 일정한 값을 출력하는 모델 밖에 얻지 못함
-  - 모델 구조 등의 개선 및 추가적인 실험 필요
-- 정가를 포함하지 않는 모델 개발의 어려움
-  - 정가를 포함하지 않았을 때 예측 성능이 많이 떨어지는 것을 발견, 중고 도서 할인율을 예측하는 모델 개발 시도
-  - 모델과 hyperparameter에 따라 R2 score 0.75~0.82 정도로 예측하는 모델은 개발 완료
-  - 데이터셋에 포함되지 않았던 도서의 중고 매물도 안정적으로 예측하나, 성능을 더 올리기는 어려웠음
-  - RNN, LSTM 등의 고도화된 모델을 이용해 성능을 더욱 높히는 것을 기대하고 있음
+- 정가를 데이터 셋에 포함하지 않는 모델 개발의 어려움
+  - 정가를 포함하지 않았을 때, train set에 없는 데이터에 대해서는 중고 판매가 예측 성능이 많이 떨어지는 것을 발견
+  - 보완하기 위해 중고 도서의 할인율을 예측하는 모델 개발 시도
+    - 모델과 hyperparameter에 따라 R2 score 0.75~0.82 정도로 예측하는 모델은 개발 완료
+    - 데이터셋에 포함되지 않았던 도서의 중고 매물도 안정적으로 예측하나, 성능을 더 올리기는 어려웠음
 - 저자명, 출판사를 인코딩 중 기타 항목으로 처리할 때 threshold 기준의 구체적인 근거를 제시하지 못 함
   - 알라딘의 Sales Point 및 개인적 경험에서의 인지도를 바탕으로 결정
   - 추가적인 조사를 통해 더 객관적이고 제시 가능한 근거 확립 가능
+
+## 8. 추후 과제
+
+- RNN 등 Neural Network를 이용한 회귀 모델 개발
+- 배포 가능한 알라딘 중고도서 데이터 셋으로 확장
+  - 중고 판매가 예측 모델 외에도 다양한 모델 개발 가능
+    - 도서 정보 및 중고 시장에서의 가격을 바탕으로 알라딘의 SalesPoint 산정법 추정
+    - 카테고리와 도서 명, 출판사 등의 정보로 출간 연도 예측
+- 베스트 셀러 이외의 도서, 공식 매점에서 판매하지 않는 도서 등으로 데이터 셋 및 프로젝트 확장
+  - 베스트 셀러에 포함된 적 없는 도서도 대상으로 하기 위한 크롤링 방법 개발 필요
