@@ -106,7 +106,7 @@
 
 - [인코딩 및 스케일링](https://github.com/kdt-3-second-Project/aladin_usedbook/blob/e40008549c28f741bf72596828fa9913f60399fd/research/240716_encoding_bookinfo.ipynb)
   - Mecab을 사용해 Category, BName,BName_sub 컬럼을 토큰화
-    - [Mecab](https://elsboo.tistory.com/44)은 원문 내 띄어쓰기에 의존하기보다 사전을 참조해 어휘를 구분하여 안정적인 결과값을 보여줌
+    - [Mecab](https://m.blog.naver.com/j7youngh/222875104191)은 원문 내 띄어쓰기에 의존하기보다 사전을 참조해 어휘를 구분하여 안정적인 결과값을 보여줌
   - 저자, 출판사, 지점 인코딩 / 텍스트 열 패딩후 출판 날짜 인코딩
   - train 데이터는 scaler 학습 및 변환, val 및 test 데이터는 학습된 scaler로 변환
 
