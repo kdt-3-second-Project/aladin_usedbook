@@ -58,18 +58,52 @@
 ### 1) 실험 설계
 - sklearn.train_test_split을 사용하여 train 80%, test 20% 비율로, ItemId값의 범 기준으로 층화해 분리
 - 모델 종류 별 비교
-    - Random Forest, XGBoost, MLP 모델 간의 성능을 비교
-    - Random Forest, XGBoost, MLP
-      - 독립변수로 사용한 기타 통계 항목(이하 참고 통계 항목)은 데이터 셋에 포함된 다른 통계 항목.
+    - Random Forest, XGBoost, MLP, RNN 모델 간의 성능을 비교
+    - Random Forest, XGBoost, MLP, RNN
+      - 독립변수로 사용한 기타 통계 항목(이하 참고 항목)은 데이터 셋에 포함된 다른 통계 항목.
     - Random Forest, XGBoost, MLP 학습을 할 때 grid search를 이용해 각 모델 별로 가장 높은 성능을 내는 hyper parameter 탐색
- 
-### 2) 참고 feature 설정
+    - 모든 모델의 성능을 비교하고, rmse,mape,mase,r2_score의 회귀 평가 지표를 사용하여 성능을 분
+### 2) 참고 창목 설정
 - 종속변수를 제외한 통계 항목 중에서 독립변수 선정
 - 도메인 지식을 활용하여 종속 변수 별로 해당하는 통계 항목 선별
-  
+- BName_sub(도서명에서 괄호안에 있는 내용 ), Author_mul(저자가 여러명 유무)등 파생 변수 생성
+
+| 종속 변수 | 참고 항목 |
+|---------|---------|
+| Price(중고가)| ItemId, quality, store, BName, BName_sub, Author, Author_mul, Publshr, Pdate, RglPrice, SlsPrice, Category | 
 
 ------
+## 4. 전처리
 
+### 1)전체 과정
+- raw data에서 결측치 삭제
+  - 결측치가 있는 행의 개수 1,214개
+  - 카테고리 데이터에서 MD 굿즈, 강연등 연관없는 데이터 존재 -> 제거 결정
+    
+-  [도서명 전처리](https://github.com/kdt-3-second-Project/aladin_usedbook/blob/e40008549c28f741bf72596828fa9913f60399fd/research/240716_check_bookinfo.ipynb) 
+  - 한자 처리 : 만약 한자와 똑같은 발음의 한글이 앞 혹은 뒤에 반복된 경우 제거, 이외의 경우는 번역
+  - 숫자 사이 , 정리 : ex) 1,000 -> 1000
+  - 로마 숫자를 아랍 숫자로 변환
+  - 특수문자 detect 및 가까운 특수 문자로 변환 : ex) '&#'
+  - 괄호속 내용 추출 후 BName_sub column에 정리 : ex) 전지적 루이 &후이 시점(양장본) -> 양장본만 BName_sub에 분리
+ 
+- [저자명 전처리](https://github.com/kdt-3-second-Project/aladin_usedbook/blob/e40008549c28f741bf72596828fa9913f60399fd/research/240716_check_bookinfo2.ipynb)
+  - 여러 명이 제작에 참여한 경우, 맨 앞의 참여자만 남김
+    - 여러 명이 제작에 참여했는지 여부를, Author_mul에 bool형태로 기록: ex) 정홍섭 글 이준성 그림 -> 정홉섭 글, True
+  - 이름 뒤에 붙은 기타 문자열 처리
+    - 기타 문자열: 역할('글', '시', '역', '외' 등 총 72가지), 외 n인, 외
+
+- 중고 목록 전처리
+  - 이상치 처리: 균일가, 하는 [하]로 통일
+    - 총 등급은 [최상,상,중,하]로 구분
+  - 배달료 처리: 2500원으로 통일되어 있어 삭
+
+- [인코딩 및 스케일링](https://github.com/kdt-3-second-Project/aladin_usedbook/blob/e40008549c28f741bf72596828fa9913f60399fd/research/240716_encoding_bookinfo.ipynb)
+  - Mecab을 사용해 Category, BName,BName_sub 컬럼을 토큰화
+    - Mecab은 원문 내 띄어쓰기에 의존하기보다 사전을 참조해 어휘를 구분하여 안정적인 결과값을 보여줌
+  - 저자, 출판사, 지점 인코딩 / 텍스트 열 패딩후 출판 날짜 인코딩
+  - train 데이터는 scaler 학습 및 변환, val 및 test 데이터는 학습된 scaler로 변환
+-----
 ## 5. 모델 학습 결과 및 평가
 ------
 
