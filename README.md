@@ -110,7 +110,7 @@
   - 저자, 출판사, 지점 인코딩 / 텍스트 열 패딩후 출판 날짜 인코딩
   - train 데이터는 scaler 학습 및 변환, val 및 test 데이터는 학습된 scaler로 변환
 
-![image](https://github.com/user-attachments/assets/f4a98000-345b-4695-a2e8-0fbfff784d68)  *그림. 전처리,스케일링후 최종 데이터*
+![image](https://github.com/user-attachments/assets/f4a98000-345b-4695-a2e8-0fbfff784d68)  *그림. 전처리,스케일링후 최종 데이터 예시*
 
 
 
