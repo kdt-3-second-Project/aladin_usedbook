@@ -119,8 +119,27 @@
 -----
 ## 5. 모델 학습 결과 및 평가
 - 모델 성능은 RMSE, MAPE, score 등을 활용하여 평가
-  - XGBoost 모델이 최종적으로 가장 우수한 성능을 보였음
-  - 
+  - Random Forest Regressor
+    
+     ![image](https://github.com/user-attachments/assets/fce0e86d-818d-4a15-a659-b9eae4fce201)
+    
+      *그림. RFR 모델 hyperparmeter: default, sample data의 feature importance*
+    - test set을 train set에 포함된 적 없는 책에 대한 중고매물로 꾸린 경우 
+     ![image](https://github.com/user-attachments/assets/5a47472e-c124-44a7-92ca-9abdaac7fc95)
+   
+      *그림. RFR 모델 salespoint를 제외한 경우
+
+     ![image](https://github.com/user-attachments/assets/abd08aad-d821-4979-9829-3080b950c32a)
+      *그림. RFR 모델 정가 제외한 경우
+
+  - XGBoost
+    ![image](https://github.com/user-attachments/assets/e2f0a3e1-0c9f-4b34-b65a-43c0eedf0ad7)
+      
+    *그림. XGBoost 모델 hyperparmeter: default*
+    - test set을 train set에 포함된 적 없는 책에 대한 중고매물로 꾸린 경우
+      ![image](https://github.com/user-attachments/assets/851c1c21-6e9c-4aec-9910-fe892b22700e)
+        *그림. XGBoost*
+
 
 ------
 
