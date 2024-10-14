@@ -81,6 +81,7 @@
 
 - 총 784,213개의 row, 7개의 column으로 구성.
   - 각 row 당 중고 도서 매물 하나에 해당
+    - 103,055 종의 도서에 대한 중고도서 매물 784,213건
   - ItemId (새 책 기준), 중고 번호, 중고 등급, 판매지점, 배달료, 중고가, 판매 url
   - **ItemId** : ItemId는 중고 도서를 포함하여 모든 상품에 각각 부여되기 때문에, 책 종류를 구별하려면 새 책 기준 ItemId를 사용해야 함
   - **중고 번호** : 해당도서의 중고도서 목록 페이지에 있었던 순서
@@ -108,15 +109,18 @@
 
 | 종속 변수 | 독립 변수 |
 |---------|---------|
-| Price | ItemId, quality, store, BName, BName_sub, Author, Author_mul, Publshr, Pdate, RglPrice, Category |
+| Price | quality, store, BName, BName_sub, Author, Author_mul, Publshr, Pdate, RglPrice, Category, SalesPoint |
 
 *도표. 모델의 종속 변수 및 독립 변수*
 
 ### 2) 실험 설계
 
 - sklearn을 이용하여 train 64%, validation 16%, test 20% 비율로 분리
+  - train : 95,061종의 도서에 대한 중고도서 501,896건
+  - valid : 62,995종의 도서에 대한 중고도서 125,474건
+  - test : 69,385종의 도서에 대한 중고도서 156,843건
 - 크게 세 가지 측면으로 실험 진행
-  - Random Forest, XGBoost 모델 간의 성능을 비교
+  - Random Forest Regressor, XGBoost 모델 간의 성능을 비교
     - Grid search를 이용해 각 모델 별로 가장 높은 성능을 내는 hyper parameter 탐색
   - 판매가와 SalesPoint를 학습에서 제외시켜도 안정적인 성능이 나오는지 탐색
   - train set에 포함되지 않았던 도서들에 대한 중고 매물로 test 대상을 한정지었을 때, 성능이 어떻게 달라지는지 탐색
@@ -192,37 +196,146 @@
 <!--실험 설계 부분과 유기적으로 구성하기-->
 
 - 모델 성능은 RMSE, MAPE, R2 Score 등을 활용하여 평가
-  - Random Forest Regressor
+- Random Forest Regressor, XGBoost 모델 간의 성능을 비교
+  - XGBoost에 대해서는 GridSearchCV를 이용해 각 모델 별로 가장 높은 성능을 내는 hyper parameter 탐색
+- 각 모델별로 4 종류의 상황에 대한 실험을 진행
+  - Expt. 1 : 모든 종속변수를 이용해 중고도서 가격 예측
+    - 종속변수 : Category, BName, BName_sub, quality, store, Author, Author_mul, Publshr, Pdate, RglPrice, SalesPoint
+  - Expt. 2 : 세일즈포인트를 제외한 종속변수를 이용해 중고도서 가격 예측
+  - Expt. 3 : 세일즈포인트와 정가를 제외한 종속변수를 이용해 중고도서 가격 예측
+  - Expt. 4 : 세일즈포인트와 정가를 제외한 종속변수를 이용해 중고도서 할인율 예측
+- 모델 평가는 두 가지 방법으로 진행
+  - test1 : 초기에 test dataset으로 설정된 데이터셋
+    - 69,385종의 도서에 대한 중고도서 156,843건
+  - test2 : train set에 포함된 적 없는 도서에 대한 중고 매물로 제한한 데이터셋
+    - valid set에서 4,084종의 도서에 대한 중고도서 4,677건
+    - test set에서 4,984종의 도서에 대한 중고도서 5,968건
+    - 총 7,994종의 도서에 대한 중고도서 10,645 건
+- 판매가와 SalesPoint를 학습에서 제외시켜도 안정적인 성능이 나오는지 탐색
+
+### 결과
+
+- Random Forest Regressor (이하 RFR)
+  - hyperparameter 별 결과
 
      ![image](https://github.com/user-attachments/assets/fce0e86d-818d-4a15-a659-b9eae4fce201)
 
-      *그림. RFR 모델 hyperparmeter: default, sample data의 feature importance*
+      *그림. RFR 모델 hyperparmeter: default인 경우의 feature importance*
 
-    - train set에 포함된 적 없는 종류의 책에 대한 중고 매물에 대해서만 평가한 경우
+  - salespoint 혹은 정가를 제외한 경우
 
      ![image](https://github.com/user-attachments/assets/5a47472e-c124-44a7-92ca-9abdaac7fc95)
 
-      *그림. RFR 모델 salespoint를 제외한 경우*
+      *그림. RFR 모델, salespoint를 제외한 경우*
 
      ![image](https://github.com/user-attachments/assets/abd08aad-d821-4979-9829-3080b950c32a)
 
-      *그림. RFR 모델 정가 제외한 경우*
+      *그림. RFR 모델, 정가 제외한 경우*
 
-  - XGBoost
+  - train set에 포함된 적 없는 도서에 대한 중고 매물로 한해서 평가한 경우
+
+- XGBoost Regressor (이하 XGB)
+  - 각 실험 환경에 대해 GridSearch를 진행한 후, 가장 성적이 높았던 두 hyperparameter에 대한 모델 평가 결과를 정리
+  - GridSearchCV
+    - fold = 3
+    - 대상 hyperparamter 및 범위
+      - *n_estimators* : [100,700,2100]
+      - *learning_rate* : [1,0.5,0.3,0.1]
+      - *max_depth* : [4,5,6]
+      - *colsample_bytree* : [0.3,0.5,1]
+    - GridSearch 결과 우수했던 hyperparmeter 및 성적
+      - *Expt. 1*
+
+        ||h2|h3|
+        |-|-:|-:|
+        |mean test score|||
+        |std test score|||
+
+        *도표. 제외한 종속 변수 없는 상황에서 best parameter 및 score*
+
+      - *Expt. 2*
+
+        ||h2|h3|
+        |-|-:|-:|
+        |mean test score|**0.9658**|0.9657|
+        |std test score|0.0035|0.0033|
+
+        *도표. SalesPoint 제외한 상황에서 best parameter 및 score*
+
+      - *Expt. 3*
+
+        ||h1|h2|
+        |-|-:|-:|
+        |mean test score|0.9048|0.9014|
+        |std test score|0.0060|0.0059|
+
+        *도표. SalesPoint, RglPrice 제외한 상황에서 best parameter 및 score*
+
+      - *Expt. 4*
+
+        ||h2|h3|
+        |-|-:|-:|
+        |mean test score|0.8277|0.8262|
+        |std test score|0.0022|0.0021|
+
+        *도표. SalesPoint, RglPrice 제외하고 할인율 예측할 때 best parameter 및 score*
+
+    - XGB 평가에 최종적으로 사용 된 hyperparmeter
+
+      ||h0|h1|h2|h3|
+      |-|-:|-:|-:|-:|
+      |colsample_bytree|1|1|1|0.5|
+      |learning_rate|0.3|0.5|0.3|0.3|
+      |max_depth|6|6|6|6|
+      |n_estimators|100|2100|2100|2100|
+
+      *도표. XGB 평가에서 사용한 hyperparmeter*
+
     ![image](https://github.com/user-attachments/assets/e2f0a3e1-0c9f-4b34-b65a-43c0eedf0ad7)
 
-    *그림. XGBoost 모델 hyperparmeter: default*
+    *그림. XGB 모델, hyperparmeter: default*
 
-    - test set을 train set에 포함된 적 없는 책에 대한 중고매물로 꾸린 경우
+
+
+- 제외한 column이 없는 경우
+
+||h0|h1|h2|h3|
+|-|-:|-:|-:|-:|
+|RMSE|||||
+|MAPE|||||
+|R2 score|||||
+
+*표. hyperparmeter 별 성적*
+
+- column 중 세일즈포인트를 제외한 경우
+
+||h0|h1|h2|h3|
+|-|-:|-:|-:|-:|
+|RMSE|||||
+|MAPE|||||
+|R2 score|||||
+
+*표. hyperparmeter 별 성적*
+
+- column 중 세일즈포인트, 정가를 제외한 경우
+
+||h0|h1|h2|h3|
+|-|-:|-:|-:|-:|
+|RMSE|||||
+|MAPE|||||
+|R2 score|||||
+
+*표. hyperparmeter 별 성적*
+
 
       ![image](https://github.com/user-attachments/assets/851c1c21-6e9c-4aec-9910-fe892b22700e)
 
-        *그림. XGBoost*
+        *그림. XGB*
 
 ## 6. 결과 분석
 
 - 가장 성능이 좋았던 분석 모델은 default hyperparmter 설정의 XGBoost 모델
-  - R2_score=0.95, mape=0.08, rmse=811
+  - R2_score=0.95, MAPE=0.08, RMSE=811
   - GridSearch 결과, validation 및 test set에서 성적이 더 잘 나오는 hyperparmeter 설정도 있었음
   - 하지만 train set에서 등장하지 않았던 도서의 경우엔 hyperparameter가 default인 경우에 더 안정적인 성능을 보임
   - 어떤 경우에서도 base line(train set에서의 평균값)에 비해 월등히 좋은 성능을 보임
@@ -233,7 +346,7 @@
 
 ### 결론
 
-- Random Forest regressor 및 XGBoost 등 간단한 모델로도 높은 성능의 모델 개발 가능
+- Random Forest Regressor 및 XGBoost 등 간단한 모델로도 높은 성능의 모델 개발 가능
 - 도서 명, 중고 등급, 정가, 출판일, 저자 등 실물 중고 도서에서 간단히 확인 가능한 특징만으로도 높은 성능이 충분히 가능
 - 중요하게 본 칼럼이 일반적인 직관에서 크게 벗어나지 않는 모델로 학습됨
 - train set에서 중고 시세를 학습한 적 없는 도서에 대한 중고 가격에 대해서도 큰 차이 없는 성능으로 예측한 것으로 보아, NLP한 결과가 모델에 충분히 반영되었음을 알 수 있음
@@ -244,7 +357,7 @@
 - 정가를 데이터 셋에 포함하지 않는 모델 개발의 어려움
   - 정가를 포함하지 않았을 때, train set에 없는 데이터에 대해서는 중고 판매가 예측 성능이 많이 떨어지는 것을 발견
   - 보완하기 위해 중고 도서의 할인율을 예측하는 모델 개발 시도
-    - 모델과 hyperparameter에 따라 R2 score 0.75~0.82 정도로 예측하는 모델은 개발 완료
+    - RFR, XGB는 hyperparameter에 따라 R2 score 0.75~0.82 정도로 학습됨
     - 데이터셋에 포함되지 않았던 도서의 중고 매물도 안정적으로 예측하나, 성능을 더 올리기는 어려웠음
 - 저자명, 출판사를 인코딩 중 기타 항목으로 처리할 때 threshold 기준의 구체적인 근거를 제시하지 못 함
   - 알라딘의 Sales Point 및 개인적 경험에서의 인지도를 바탕으로 결정
