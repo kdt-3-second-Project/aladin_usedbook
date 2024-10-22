@@ -109,7 +109,7 @@
 
   | 종속 변수 | 독립 변수 |
   |---------|---------|
-  | Price | quality, store, BName, BName_sub, Author, Author_mul, Publshr, Pdate, RglPrice, Category, SalesPoint |
+  | Price |quality, store, BName, BName_sub, Author, Author_mul, Publshr, Pdate, RglPrice, Category, SalesPoint |
 
   *<b>도표.6</b> 모델의 종속 변수 및 독립 변수*
 
@@ -194,11 +194,11 @@
 - Random Forest Regressor, XGBoost 모델 간의 성능을 비교
   - XGBoost에 대해서는 GridSearchCV를 이용해 각 모델 별로 가장 높은 성능을 내는 hyper parameter 탐색
 - 각 모델 별로 4 종류의 상황에 대한 실험을 진행
-  - Expt. 1 : 모든 종속변수를 이용해 중고도서 가격 예측
-    - 종속변수 : Category, BName, BName_sub, quality, store, Author, Author_mul, Publshr, Pdate, RglPrice, SalesPoint
-  - Expt. 2 : 세일즈포인트를 제외한 종속변수를 이용해 중고도서 가격 예측
-  - Expt. 3 : 세일즈포인트와 정가를 제외한 종속변수를 이용해 중고도서 가격 예측
-  - Expt. 4 : 세일즈포인트와 정가를 제외한 종속변수를 이용해 중고도서 할인율 예측
+  - Expt. 1 : 모든 독립변수를 이용해 중고도서 가격 예측
+    - 독립변수 : Category, BName, BName_sub, quality, store, Author, Author_mul, Publshr, Pdate, RglPrice, SalesPoint
+  - Expt. 2 : 세일즈포인트를 제외한 독립변수를 이용해 중고도서 가격 예측
+  - Expt. 3 : 세일즈포인트와 정가를 제외한 독립변수를 이용해 중고도서 가격 예측
+  - Expt. 4 : 세일즈포인트와 정가를 제외한 독립변수를 이용해 중고도서 할인율 예측
 - 모델 평가는 두 가지 방법으로 진행
   - test1 : 초기에 test dataset으로 설정된 데이터셋
     - 69,385종의 도서에 대한 중고도서 156,843건
@@ -234,7 +234,7 @@
 #### 우수 hyperparameter 및 성적
 
 - 아래에는 각 실험 별로 가장 성적이 높았던 4개의 hyperparameter에 대한 평가 결과를 정리
-- *Expt. 1* : 제외한 종속 변수 없이 중고가 예측
+- *Expt. 1* : 제외한 독립변수 없이 중고가 예측
 
   ||**h2**|h3|h5|h6|
   |-|-:|-:|-:|-:|
@@ -246,7 +246,7 @@
   |subsample|*1*|1|1|1|
   |mean valid score|**_0.97207_**|0.97172|0.97163|0.97145|
 
-  *<b>도표.9</b> 제외한 종속 변수 없는 상황에서 best parameter 및 R2 score*
+  *<b>도표.9</b> 제외한 독립변수 없는 상황에서 best parameter 및 R2 score*
 
 - *Expt. 2* : SalesPoint 제외하고 중고가 예측
 
@@ -508,10 +508,10 @@
 ## 8. 추후 과제
 
 - RNN 등 Neural Network를 이용한 회귀 모델 개발
-- 배포 가능한 알라딘 중고도서 데이터 셋으로 확장
-  - 중고 판매가 예측 모델 외에도 다양한 모델 개발 가능
-    - 카테고리와 도서 명, 출판사, 출간 연도 등의 정보로 정가 예측
-    - 카테고리와 도서 명, 출판사, 정가 등의 정보로 출간 연도 예측
-    - 도서 정보 및 중고 시장에서의 가격을 바탕으로 알라딘의 SalesPoint 산정법 추정
+- 중고 판매가 예측 모델 외에도 다양한 모델 개발 가능
+  - 카테고리와 도서 명, 출판사, 출간 연도 등의 정보로 정가 예측
+  - 카테고리와 도서 명, 출판사, 정가 등의 정보로 출간 연도 예측
+  - 도서 정보 및 중고 시장에서의 가격을 바탕으로 알라딘의 SalesPoint 산정법 추정
+- 배포 가능한 알라딘 중고도서 데이터 셋으로 정리하여 공개
 - 베스트 셀러 이외의 도서, 공식 매점에서 판매하지 않는 도서 등으로 데이터 셋 및 프로젝트 확장
   - 베스트 셀러에 포함된 적 없는 도서도 대상으로 하기 위한 크롤링 방법 개발 필요
