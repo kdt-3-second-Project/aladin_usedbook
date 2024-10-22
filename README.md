@@ -119,10 +119,10 @@
   - train : 95,061종의 도서에 대한 중고도서 501,896건
   - valid : 62,995종의 도서에 대한 중고도서 125,474건
   - test : 69,385종의 도서에 대한 중고도서 156,843건
+- XGBoost Regressor(이하 XGB)을 학습시킬 때 높은 성능을 내는 hyperparameter 탐색
 - 크게 세 가지 측면으로 실험 진행
-  - Random Forest Regressor, XGBoost 모델 간의 성능을 비교
-    - Grid search를 이용해 각 모델 별로 가장 높은 성능을 내는 hyper parameter 탐색
-  - 판매가와 SalesPoint를 학습에서 제외시켜도 안정적인 성능이 나오는지 탐색
+  - Grid search를 이용해 각 실험 별로 가장 높은 성능을 내는 hyper parameter 탐색
+  - 정가와 SalesPoint를 학습에서 제외시켜도 안정적인 성능이 나오는지 탐색
   - train set에 포함되지 않았던 도서들에 대한 중고 매물로 test 대상을 한정지었을 때, 성능이 어떻게 달라지는지 탐색
 - RMSE, MAPE, R2 Score 등의 회귀 평가 지표를 사용하여 성능을 각 모델 별로 분석
 
@@ -190,15 +190,17 @@
 
 *그림. train셋의 평균을 baseline으로 했을 때, Random Forest Regressor 적용 결과 분석 예시*
 
-## 5. 모델 학습 결과 및 평가
+## 5. 모델 학습 및 결과
 
 <!--내용 검토 및 이미지 업데이트-->
 <!--실험 설계 부분과 유기적으로 구성하기-->
 
+### 개요
+
 - 모델 성능은 RMSE, MAPE, R2 Score 등을 활용하여 평가
 - Random Forest Regressor, XGBoost 모델 간의 성능을 비교
   - XGBoost에 대해서는 GridSearchCV를 이용해 각 모델 별로 가장 높은 성능을 내는 hyper parameter 탐색
-- 각 모델별로 4 종류의 상황에 대한 실험을 진행
+- 각 모델 별로 4 종류의 상황에 대한 실험을 진행
   - Expt. 1 : 모든 종속변수를 이용해 중고도서 가격 예측
     - 종속변수 : Category, BName, BName_sub, quality, store, Author, Author_mul, Publshr, Pdate, RglPrice, SalesPoint
   - Expt. 2 : 세일즈포인트를 제외한 종속변수를 이용해 중고도서 가격 예측
@@ -208,141 +210,168 @@
   - test1 : 초기에 test dataset으로 설정된 데이터셋
     - 69,385종의 도서에 대한 중고도서 156,843건
   - test2 : train set에 포함된 적 없는 도서에 대한 중고 매물로 제한한 데이터셋
-    - valid set에서 4,084종의 도서에 대한 중고도서 4,677건
     - test set에서 4,984종의 도서에 대한 중고도서 5,968건
-    - 총 7,994종의 도서에 대한 중고도서 10,645 건
 - 판매가와 SalesPoint를 학습에서 제외시켜도 안정적인 성능이 나오는지 탐색
 
-### 결과
+### GridSearchCV를 통한 hyperparmeter 선정
 
-- Random Forest Regressor (이하 RFR)
-  - hyperparameter 별 결과
+#### 설계
 
-     ![image](https://github.com/user-attachments/assets/fce0e86d-818d-4a15-a659-b9eae4fce201)
-
-      *그림. RFR 모델 hyperparmeter: default인 경우의 feature importance*
-
-  - salespoint 혹은 정가를 제외한 경우
-
-     ![image](https://github.com/user-attachments/assets/5a47472e-c124-44a7-92ca-9abdaac7fc95)
-
-      *그림. RFR 모델, salespoint를 제외한 경우*
-
-     ![image](https://github.com/user-attachments/assets/abd08aad-d821-4979-9829-3080b950c32a)
-
-      *그림. RFR 모델, 정가 제외한 경우*
-
-  - train set에 포함된 적 없는 도서에 대한 중고 매물로 한해서 평가한 경우
-
-- XGBoost Regressor (이하 XGB)
-  - 각 실험 환경에 대해 GridSearch를 진행한 후, 가장 성적이 높았던 7개의 hyperparameter에 대한 모델 평가 결과를 정리
-  - GridSearchCV
+- 각 실험에 대해 GridSearchCV를 진행한 후, 가장 성적이 높았던 7개의 hyperparameter들을 후보로 삼음
+  - 총 486개의 hyperparameter 중에 총 14개의 후보를 고름
+- hyperparameter
+  - 고정 hyperparameter
     - fold = 3
-    - 대상 hyperparamter 및 범위
-      - *num_boost_round* : [100,1500,2500]
-      - *learning_rate* : [0.5,0.3,0.1]
-      - *max_depth* : [4,5,6]
-      - *min_child_weight* : [1,4,7]
-      - *colsample_bytree* : [0.5,1]
-      - *subsample* : [0.4,0.7,1]
-    - GridSearch 결과 우수했던 hyperparmeter 및 성적
-      - *Expt. 1*
+    - early_stopping_rounds : num_boost_rounds에 따라 logistic하게 변하도록 설정
 
-        ||h1|**h2**|h3|h4|h5|h6|h7|
-        |-|-:|-:|-:|-:|-:|-:|-:|
-        |num_boost_round|1500|*2500*|2500|2500|2500|2500|2500|
-        |learning_rate|0.3|*0.3*|0.3|0.3|0.3|0.3|0.3|
-        |max_depth|6|*6*|6|6|6|6|6|
-        |min_child_weight|4|*1*|1|4|4|7|7|
-        |colsample_bytree|1|*0.5*|1|0.5|1|0.5|1|
-        |subsample|1|*1*|1|1|1|1|1|
-        |mean valid score|0.97100|**_0.97207_**|0.97172|0.97141|0.97163|0.97145|0.97143|
+      |num_boost_rounds|100|1500|2500|
+      |:-:|-:|-:|-:|
+      |early_stopping_rounds|30|48|51|
 
-        *도표. 제외한 종속 변수 없는 상황에서 best parameter 및 $R^2$ score*
+      *도표. early_stopping_rounds 설정값*
 
-      - *Expt. 2*
+  - 대상 hyperparamter 및 범위
+    - *num_boost_round* : [100, 1500, 2500]
+    - *learning_rate* : [0.5, 0.3, 0.1]
+    - *max_depth* : [4, 5, 6]
+    - *min_child_weight* : [1, 4, 7]
+    - *colsample_bytree* : [0.5, 1]
+    - *subsample* : [0.4, 0.7, 1]
 
-        ||**h2**|h3|h4|h7|
-        |-|-:|-:|-:|-:|
-        |num_boost_round|2500|2500|2500|2500|
-        |learning_rate|0.3|0.3|0.3|0.3|
-        |max_depth|6|6|6|6|
-        |min_child_weight|1|1|1|7|
-        |colsample_bytree|0.5|1|1|1|
-        |subsample|1|1|1|1|
-        |mean valid score|**0.97139**|0.97110|0.97058|0.97049|
+#### 우수 hyperparameter 및 성적
 
-        *도표. SalesPoint 제외한 상황에서 best parameter 및 $R^2$ score*
+- 아래에는 각 실험 별로 가장 성적이 높았던 4개의 hyperparameter에 대한 평가 결과를 정리
+- *Expt. 1* : 제외한 종속 변수 없이 중고가 예측
 
-      - *Expt. 3*
+  ||**h2**|h3|h5|h6|
+  |-|-:|-:|-:|-:|
+  |num_boost_round|*2500*|2500|2500|2500|
+  |learning_rate|*0.3*|0.3|0.3|0.3|
+  |max_depth|*6*|6|6|6|
+  |min_child_weight|*1*|1|4|7|
+  |colsample_bytree|*0.5*|1|1|0.5|
+  |subsample|*1*|1|1|1|
+  |mean valid score|**_0.97207_**|0.97172|0.97163|0.97145|
 
-        ||h1|h2|
-        |-|-:|-:|
-        |mean test score|0.9048|0.9014|
-        |std test score|0.0060|0.0059|
+  *도표. 제외한 종속 변수 없는 상황에서 best parameter 및 $R^2$ score*
 
-        *도표. SalesPoint, RglPrice 제외한 상황에서 best parameter 및 score*
+- *Expt. 2* : SalesPoint 제외하고 중고가 예측
 
-      - *Expt. 4*
+  ||**h2**|h3|h4|h7|
+  |-|-:|-:|-:|-:|
+  |num_boost_round|*2500*|2500|2500|2500|
+  |learning_rate|*0.3*|0.3|0.3|0.3|
+  |max_depth|*6*|6|6|6|
+  |min_child_weight|*1*|1|1|7|
+  |colsample_bytree|*0.5*|1|1|1|
+  |subsample|*1*|1|1|1|
+  |mean valid score|_**0.97139**_|0.97110|0.97058|0.97049|
 
-        ||h2|h3|
-        |-|-:|-:|
-        |mean test score|0.8277|0.8262|
-        |std test score|0.0022|0.0021|
+  *도표. SalesPoint 제외한 상황에서 best parameter 및 $R^2$ score*
 
-        *도표. SalesPoint, RglPrice 제외하고 할인율 예측할 때 best parameter 및 score*
+- *Expt. 3* : SalesPoint, 정가(RglrPrice) 제외하고 중고가 예측
 
-    - XGB 평가에 최종적으로 사용 된 hyperparmeter
+  ||h9|**h10**|h12|h13|
+  |-|-:|-:|-:|-:|
+  |num_boost_round|2500|*2500*|2500|2500|
+  |learning_rate|0.5|*0.5*|0.5|0.5|
+  |max_depth|6|*6*|6|6|
+  |min_child_weight|1|*1*|4|7|
+  |colsample_bytree|1|*0.5*|1|1|
+  |subsample|1|*1*|1|1|
+  |mean valid score|0.89100|**_0.89926_**|0.89525|0.89449|
 
-      ||h0|h1|h2|h3|
-      |-|-:|-:|-:|-:|
-      |colsample_bytree|1|1|1|0.5|
-      |learning_rate|0.3|0.5|0.3|0.3|
-      |max_depth|6|6|6|6|
-      |n_estimators|100|2100|2100|2100|
+  *도표. SalesPoint, RglPrice 제외한 상황에서 best parameter 및 score*
 
-      *도표. XGB 평가에서 사용한 hyperparmeter*
+- *Expt. 4* : SalesPoint, 정가(RglPrice) 제외하고 할인율 예측
 
-    ![image](https://github.com/user-attachments/assets/e2f0a3e1-0c9f-4b34-b65a-43c0eedf0ad7)
+  ||h9|h3|**h5**|h7|
+  |-|-:|-:|-:|-:|
+  |num_boost_round|2500|2500|*2500*|2500|
+  |learning_rate|0.5|0.3|*0.3*|0.3|
+  |max_depth|6|6|*6*|6|
+  |min_child_weight|1|1|*4*|7|
+  |colsample_bytree|1|1|*1*|1|
+  |subsample|1|1|*1*|1|
+  |mean valid score|0.79814|0.79872|**_0.79887_**|0.79823|
 
-    *그림. XGB 모델, hyperparmeter: default*
+  *도표. SalesPoint, RglPrice 제외하고 할인율 예측할 때 best parameter 및 score*
 
+### XGB 모델 학습 및 평가
 
+#### XGB 평가에 최종적으로 사용 된 hyperparmeter
 
-- 제외한 column이 없는 경우
+- GridSearchCV를 통해 고른 14개의 hyperparmeter와 default 값(h0)에 대해서 테스트 진행
 
-||h0|h1|h2|h3|
-|-|-:|-:|-:|-:|
-|RMSE|||||
-|MAPE|||||
-|R2 score|||||
+  ||h0|h1|h2|h3|h4|h5|h6|
+  |:-|-:|-:|-:|-:|-:|-:|-:|
+  |num_boost_round|100|1500|2500|2500|2500|2500|2500|
+  |learning_rate|0.3|0.3|0.3|0.3|0.3|0.3|0.3|
+  |max_depth|6|6|6|6|6|6|6|
+  |min_child_weight|1|4|1|1|4|4|7|
+  |colsample_bytree|1|1|0.5|1|0.5|1|0.5|
+  |subsample|1|1|1|1|1|1|1|
 
-*표. hyperparmeter 별 성적*
+  ||h7|h8|h9|h10|h11|h12|h13|h14|
+  |:-|-:|-:|-:|-:|-:|-:|-:|-:|
+  |num_boost_round|2500|2500|2500|2500|2500|2500|2500|2500|
+  |learning_rate|0.3|0.5|0.5|0.5|0.5|0.5|0.5|0.5|
+  |max_depth|6|5|6|6|6|6|6|6|
+  |min_child_weight|7|1|1|1|4|4|7|7|
+  |colsample_bytree|1|1|0.5|1|0.5|1|1|0.5|
+  |subsample|1|1|1|1|1|1|1|1|
 
-- column 중 세일즈포인트를 제외한 경우
+  *도표. XGB 평가에서 최종적으로 사용한 hyperparmeter 목록*
+  
+#### 평가 기준
 
-||h0|h1|h2|h3|
-|-|-:|-:|-:|-:|
-|RMSE|||||
-|MAPE|||||
-|R2 score|||||
+- metric : RMSE, MAPE, $R^2$ score
+- 각 metric에 대해 test1과 test2에서의 값에 조화 평균을 취한 값을 기준으로, 각 metric 별 순위를 매김
+  - 산술, 기하 평균에 비해 조화 평균은 값들 간의 차이가 크지 않은 것을 상대적으로 높게 평가
+  - training set에 포함됐는지 여부에 큰 차이 없이 고르게 잘 예측하는 모델을 목표로 하기 때문에 조화 평균을 사용
+- metric 별 성능 순위 간에 조화 평균을 구한 뒤 순위를 메겨, 실험 별로 각각 모델들의 순위 및 best model을 결정
 
-*표. hyperparmeter 별 성적*
+#### 모델 평가
 
-- column 중 세일즈포인트, 정가를 제외한 경우
+- *Expt.1*
+  - 학습 결과
+  | **test1**|        h1 |        h2 |        h3 |        h5 |        h7 |       h10 |       h12 |
+  |:---------|----------:|----------:|----------:|----------:|----------:|----------:|----------:|
+  | RMSE     | 624.77    | 610.14    | 605.39    | 612.01    | 611.04    | 629.77    | 631.19    |
+  | MAPE     |   0.06398 |   0.06264 |   0.06101 |   0.06162 |   0.06168 |   0.06322 |   0.06335 |
+  | R2_SCORE |   0.9722  |   0.97349 |   0.9739  |   0.97332 |   0.97341 |   0.97175 |   0.97163 |
+  
+  *도표. Expt.1에서 test set으로 평가한 결과*
 
-||h0|h1|h2|h3|
-|-|-:|-:|-:|-:|
-|RMSE|||||
-|MAPE|||||
-|R2 score|||||
+  | **test2**|         h1 |         h2 |         h3 |         h5 |         h7 |        h10 |        h12 |
+  |:---------|-----------:|-----------:|-----------:|-----------:|-----------:|-----------:|-----------:|
+  | RMSE     | 1461.72    | 1463.05    | 1477.96    | 1469.03    | 1499.15    | 1606.71    | 1607.75    |
+  | MAPE     |    0.14177 |    0.15186 |    0.14469 |    0.14524 |    0.14276 |    0.1594  |    0.1551  |
+  | R2_SCORE |    0.91174 |    0.91158 |    0.90977 |    0.91085 |    0.90716 |    0.89336 |    0.89322 |
+  
+  *도표. Expt.1에서 test set 중 train set에 포함된 적 없는 종류의 도서들에 대해 평가한 결과*
 
-*표. hyperparmeter 별 성적*
+  | **평균** |        h1 |        h2 |        **h3** |        h5 |        h7 |       h10 |       h12 |
+  |:---------|----------:|----------:|--------------:|----------:|----------:|----------:|----------:|
+  | RMSE     | 875.38    | 861.15    | **858.95**    | 864.05    | 868.21    | 904.87    | 906.49    |
+  | MAPE     |   0.08817 |   0.0887  |   **0.08583** |   0.08653 |   0.08614 |   0.09053 |   0.08996 |
+  | R2_SCORE |   0.941   |   0.94152 |   **0.94074** |   0.94105 |   0.93912 |   0.93091 |   0.93078 |
+  | 종합순위 |   4       |   1       |   **0**       |   2       |   3       |   9       |   8       |
 
+  *도표. Expt.1에서 두 평가에 대해 조화평균을 취하고 순위를 매긴 결과*
 
-      ![image](https://github.com/user-attachments/assets/851c1c21-6e9c-4aec-9910-fe892b22700e)
+  - Best model
+    - hyperparameter : h3
+      - *num_boost_round* :
+      - *learning_rate* :
+      - *max_depth* :
+      - *min_child_weight* :
+      - *colsample_bytree* :
+      - *subsample* :
 
-        *그림. XGB*
+    *도표. Expt.1 의 best model의 결과값 분포*
+
+    *도표. Expt.1 의 best model의 feature importance*
 
 ## 6. 결과 분석
 
@@ -369,7 +398,7 @@
 - 정가를 데이터 셋에 포함하지 않는 모델 개발의 어려움
   - 정가를 포함하지 않았을 때, train set에 없는 데이터에 대해서는 중고 판매가 예측 성능이 많이 떨어지는 것을 발견
   - 보완하기 위해 중고 도서의 할인율을 예측하는 모델 개발 시도
-    - RFR, XGB는 hyperparameter에 따라 R2 score 0.75~0.82 정도로 학습됨
+    - XGB는 hyperparameter에 따라 R2 score 0.75~0.82 정도로 학습됨
     - 데이터셋에 포함되지 않았던 도서의 중고 매물도 안정적으로 예측하나, 성능을 더 올리기는 어려웠음
 - 저자명, 출판사를 인코딩 중 기타 항목으로 처리할 때 threshold 기준의 구체적인 근거를 제시하지 못 함
   - 알라딘의 Sales Point 및 개인적 경험에서의 인지도를 바탕으로 결정
