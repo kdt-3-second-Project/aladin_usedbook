@@ -1,9 +1,3 @@
-<style>
-  rd {color : #db2200}
-  gr {color : #22db71}
-  bl {color : #005adb}
-</style>
-
 # 알라딘 중고 도서 데이터셋 구축 및 그에 기반한 중고 서적 가격 예측 모델
 
 프로젝트 구성원: 오도은, 박예림, 이준성, 정홍섭 / [발표 슬라이드](https://docs.google.com/presentation/d/15EIOMGpadZQf3cT2k0pfClS9DVICLmmf5ZTH1k4XnKc/edit?usp=sharing)
@@ -43,7 +37,7 @@
 
 ![image](https://github.com/user-attachments/assets/e330ca44-893c-4fad-8d91-4a2f520c13af)
 
-*도표. 알라딘 주간 베스트셀러 페이지 예시*
+*<b>도표.</b> 알라딘 주간 베스트셀러 페이지 예시*
 
 - 총 1,415,586개의 row와 랭킹, 구분, 도서 명, ItemId, ISBN13, 부가기호, 저자, 출판사, 출판일, 정가, 판매가, 마일리지, 세일즈 포인트, 카테고리, 날짜 12개의 column
   - **구분** : 국내도서, 외국도서 등으로 구분되어 있음
@@ -62,13 +56,13 @@
 
 ![image](https://github.com/user-attachments/assets/8d74d9a6-3423-4bd3-b0a0-27817761de9c)
 
-*도표. 알라딘 주간 베스트 셀러*
+*<b>도표.</b> 알라딘 주간 베스트 셀러*
 
 #### [알라딘 중고 도서 데이터](https://www.aladin.co.kr/shop/UsedShop/wuseditemall.aspx?ItemId=254468327&TabType=3&Fix=1)
 
 ![image](https://github.com/user-attachments/assets/e8840608-96f8-47e6-954b-5d6e08f47df9)
 
-*도표. 도서 별 중고 매물 목록 페이지 예시*
+*<b>도표.</b> 도서 별 중고 매물 목록 페이지 예시*
 
 <!--위의 탭을 포함하는 이미지로 업데이트 필요-->
 
@@ -83,7 +77,7 @@
 
 ![image](https://github.com/user-attachments/assets/6bc6657e-cc45-4830-baaa-fca240733d6e)
 
-*도표. 알라딘 중고 도서 데이터*
+*<b>도표.</b> 알라딘 중고 도서 데이터*
 
 - 총 784,213개의 row, 7개의 column으로 구성.
   - 각 row 당 중고 도서 매물 하나에 해당
@@ -102,7 +96,7 @@
 
 ![image](https://github.com/user-attachments/assets/caa98ef5-b5be-47d9-a9c4-9ff236ecdb48)
 
-*도표. 데이터 셋들에 포함된 주요 column 및 그에 대한 개요*
+*<b>도표.</b> 데이터 셋들에 포함된 주요 column 및 그에 대한 개요*
 
 ## 3. 문제 설정
 
@@ -117,7 +111,7 @@
   |---------|---------|
   | Price | quality, store, BName, BName_sub, Author, Author_mul, Publshr, Pdate, RglPrice, Category, SalesPoint |
 
-  *도표. 모델의 종속 변수 및 독립 변수*
+  *<b>도표.</b> 모델의 종속 변수 및 독립 변수*
 
 ### 2) 실험 설계
 
@@ -136,7 +130,7 @@
 
 ### 1) 전체 과정
 
-#### 베스트 셀러 목록 전처리
+#### [베스트 셀러 목록 전처리](./code/step2_preprocess_bookinfo.py)
 
 - 결측치 처리
   - 저자 명, 구분, 출판사, 카테고리 등에 결측치가 있는 행의 개수 1,214개
@@ -166,7 +160,7 @@
 - 출간일 : DateTime 타입으로 파싱
 - ItemId, 정가, 판매가 : 정수 형태로 변환
 
-#### 중고 도서 목록 전처리
+#### [중고 도서 목록 전처리](./code/step3_preprocess_usedinfo.py)
 
 - 이상치 처리:
   - 알라딘 페이지에서 '최상', '상', '중' 등급이 있는 것으로 안내하지만, '균일가', '하' 등급도 소수 존재
@@ -190,7 +184,7 @@
 
   ![image](https://github.com/user-attachments/assets/f4a98000-345b-4695-a2e8-0fbfff784d68)
 
-  *그림. 전처리,스케일링후 최종 데이터 예시*
+  *<b>도표.</b> 전처리,스케일링후 최종 데이터 예시*
 
 ## 5. 모델 학습 및 결과
 
@@ -212,7 +206,7 @@
     - test set에서 4,984종의 도서에 대한 중고도서 5,968건
 - 판매가와 SalesPoint를 학습에서 제외시켜도 안정적인 성능이 나오는지 탐색
 
-### GridSearchCV를 통한 hyperparmeter 선정
+### [GridSearchCV를 통한 hyperparmeter 선정](./research/240721_GridSearch_for_XGB.ipynb)
 
 #### 설계
 
@@ -227,7 +221,7 @@
       |:-:|-:|-:|-:|
       |early_stopping_rounds|30|48|51|
 
-      *도표. early_stopping_rounds 설정값*
+      *<b>도표.</b> early_stopping_rounds 설정값*
 
   - 대상 hyperparamter 및 범위
     - *num_boost_round* : [100, 1500, 2500]
@@ -252,7 +246,7 @@
   |subsample|*1*|1|1|1|
   |mean valid score|**_0.97207_**|0.97172|0.97163|0.97145|
 
-  *도표. 제외한 종속 변수 없는 상황에서 best parameter 및 R2 score*
+  *<b>도표.</b> 제외한 종속 변수 없는 상황에서 best parameter 및 R2 score*
 
 - *Expt. 2* : SalesPoint 제외하고 중고가 예측
 
@@ -266,7 +260,7 @@
   |subsample|*1*|1|1|1|
   |mean valid score|_**0.97139**_|0.97110|0.97058|0.97049|
 
-  *도표. SalesPoint 제외한 상황에서 best parameter 및 R2 score*
+  *<b>도표.</b> SalesPoint 제외한 상황에서 best parameter 및 R2 score*
 
 - *Expt. 3* : SalesPoint, 정가(RglrPrice) 제외하고 중고가 예측
 
@@ -280,7 +274,7 @@
   |subsample|1|*1*|1|1|
   |mean valid score|0.89100|**_0.89926_**|0.89525|0.89449|
 
-  *도표. SalesPoint, RglPrice 제외한 상황에서 best parameter 및 R2 score*
+  *<b>도표.</b> SalesPoint, RglPrice 제외한 상황에서 best parameter 및 R2 score*
 
 - *Expt. 4* : SalesPoint, 정가(RglPrice) 제외하고 할인율 예측
 
@@ -294,9 +288,9 @@
   |subsample|1|1|*1*|1|
   |mean valid score|0.79814|0.79872|**_0.79887_**|0.79823|
 
-  *도표. SalesPoint, RglPrice 제외하고 할인율 예측할 때 best parameter 및 R2 score*
+  *<b>도표.</b> SalesPoint, RglPrice 제외하고 할인율 예측할 때 best parameter 및 R2 score*
 
-### XGB 모델 학습 및 평가
+### [XGB 모델 학습 및 평가](./research/240721_hyperparameters_XGB.ipynb)
 
 #### XGB 평가에 최종적으로 사용 된 hyperparmeter
 
@@ -320,7 +314,7 @@
   |colsample_bytree|1|1|0.5|1|0.5|1|1|0.5|
   |subsample|1|1|1|1|1|1|1|1|
 
-  *도표. XGB 평가에서 최종적으로 사용한 hyperparmeter 목록*
+  *<b>도표.</b> XGB 평가에서 최종적으로 사용한 hyperparmeter 목록*
   
 #### 평가 기준
 
@@ -341,7 +335,7 @@
   | MAPE     |   0.08123 |   0.06398 |   0.06264 |   0.06101 |   0.06162 |   0.06168 |   0.06322 |   0.06335 |
   | R2_SCORE |   0.95539 |   0.9722  |   0.97349 |   0.9739  |   0.97332 |   0.97341 |   0.97175 |   0.97163 |
   
-  *도표. Expt.1에서 test set으로 평가한 결과*
+  *<b>도표.</b> Expt.1에서 test set으로 평가한 결과*
 
   | **test2**|         h0 |         h1 |         h2 |         h3 |         h5 |         h7 |        h10 |        h12 |
   |:---------|-----------:|-----------:|-----------:|-----------:|-----------:|-----------:|-----------:|-----------:|
@@ -349,7 +343,7 @@
   | MAPE     |    0.13294 |    0.14177 |    0.15186 |    0.14469 |    0.14524 |    0.14276 |    0.1594  |    0.1551  |
   | R2_SCORE |    0.91175 |    0.91174 |    0.91158 |    0.90977 |    0.91085 |    0.90716 |    0.89336 |    0.89322 |
   
-  *도표. Expt.1에서 test set 중 train set에 포함된 적 없는 종류의 도서들에 대해 평가한 결과*
+  *<b>도표.</b> Expt.1에서 test set 중 train set에 포함된 적 없는 종류의 도서들에 대해 평가한 결과*
 
   | **평균** |         h0 |        h1 |        h2 |       <b> h3</b> |        h5 |        h7 |       h10 |       h12 |
   |:---------|-----------:|----------:|----------:|-----------------:|----------:|----------:|----------:|----------:|
@@ -358,7 +352,7 @@
   | R2_SCORE |    0.93306 |   0.941   |   0.94152 | <b>  0.94074</b> |   0.94105 |   0.93912 |   0.93091 |   0.93078 |
   | 종합순위 |   11       |   4       |   1       | <b>  0      </b> |   2       |   3       |   9       |   8       |
 
-  *도표. Expt.1에서 두 평가에 대해 조화평균을 취하고 순위를 매긴 결과*
+  *<b>도표.</b> Expt.1에서 두 평가에 대해 조화평균을 취하고 순위를 매긴 결과*
 
   - Best model
     - hyperparameter : h3
@@ -369,10 +363,11 @@
       - *colsample_bytree* : 1
       - *subsample* : 1
 
-    *도표. Expt.1 의 best model의 결과값 분포*
+
+    *<b>도표.</b> Expt.1의 test1에서 best model의 예측값 및 오차 분포와 성적*
 
     ![h3_fi](./imgs/h3_fi.png)
-    *도표. Expt.1 의 best model의 feature importance*
+    *<b>도표.</b> Expt.1의 best model의 feature importance*
 
 - *Expt.2*
   - 학습 결과
@@ -383,7 +378,7 @@
   | MAPE     |   0.08259 |   0.06514 |   0.06445 |   0.06215 |   0.06243 |   0.06266 |   0.06339 |   0.06427 |
   | R2_SCORE |   0.95312 |   0.97199 |   0.97288 |   0.97243 |   0.97344 |   0.97337 |   0.96982 |   0.96978 |
 
-  *도표. Expt.2에서 test set으로 평가한 결과*
+  *<b>도표.</b> Expt.2에서 test set으로 평가한 결과*
 
   | **test2**|         h0 |         h1 |         h2 |         h3 |         h5 |         h7 |        h10 |        h12 |
   |:---------|-----------:|-----------:|-----------:|-----------:|-----------:|-----------:|-----------:|-----------:|
@@ -391,7 +386,7 @@
   | MAPE     |    0.13521 |    0.1431  |    0.15337 |    0.14704 |    0.14448 |    0.14406 |    0.15631 |    0.15414 |
   | R2_SCORE |    0.89826 |    0.91454 |    0.90916 |    0.89581 |    0.91429 |    0.91372 |    0.87396 |    0.87801 |
 
-  *도표. Expt.2에서 test set 중 train set에 포함된 적 없는 종류의 도서들에 대해 평가한 결과*
+  *<b>도표.</b> Expt.2에서 test set 중 train set에 포함된 적 없는 종류의 도서들에 대해 평가한 결과*
 
   | **평균** |         h0 |        h1 |        h2 |        h3 |      <b>  h5</b> |        h7 |      h10 |       h12 |
   |:---------|-----------:|----------:|----------:|----------:|-----------------:|----------:|---------:|----------:|
@@ -400,7 +395,7 @@
   | R2_SCORE |    0.92488 |   0.94239 |   0.93994 |   0.93255 | <b>  0.94294</b> |   0.9426  |   0.9194 |   0.92162 |
   | 종합순위 |   14       |   2       |   3       |   4       | <b>  0      </b> |   1       |   8      |  10       |
 
-  *도표. Expt.2에서 두 평가에 대해 조화평균을 취하고 순위를 매긴 결과*
+  *<b>도표.</b> Expt.2에서 두 평가에 대해 조화평균을 취하고 순위를 매긴 결과*
 
   - Best model
     - hyperparameter : h5
@@ -411,10 +406,10 @@
       - *colsample_bytree* : 1
       - *subsample* : 1
 
-    *도표. Expt.2 의 best model의 결과값 분포*
+    *<b>도표.</b> Expt.2 의 best model의 결과값 분포*
 
     ![h5_fi](./imgs/h5_fi.png)
-    *도표. Expt.2 의 best model의 feature importance*
+    *<b>도표.</b> Expt.2 의 best model의 feature importance*
 
 - *Expt.3*
   - 학습 결과
@@ -425,7 +420,7 @@
   | MAPE     |    0.1986  |    0.12    |    0.10984 |    0.10306 |    0.10446 |    0.10569 |   0.09728 |   0.09868 |
   | R2_SCORE |    0.72113 |    0.90187 |    0.91673 |    0.9243  |    0.9229  |    0.91994 |   0.9314  |   0.92935 |
 
-  *도표. Expt.3에서 test set으로 평가한 결과*
+  *<b>도표.</b> Expt.3에서 test set으로 평가한 결과*
 
   | **test2**|         h0 |         h1 |         h2 |         h3 |         h5 |         h7 |        h10 |        h12 |
   |:---------|-----------:|-----------:|-----------:|-----------:|-----------:|-----------:|-----------:|-----------:|
@@ -433,7 +428,7 @@
   | MAPE     |    0.40055 |    0.38649 |    0.38991 |    0.39703 |    0.3851  |    0.38697 |    0.42367 |    0.42468 |
   | R2_SCORE |    0.54339 |    0.57979 |    0.56034 |    0.55051 |    0.58212 |    0.56944 |    0.51455 |    0.52876 |  
 
-  *도표. Expt.3에서 test set 중 train set에 포함된 적 없는 종류의 도서들에 대해 평가한 결과*
+  *<b>도표.</b> Expt.3에서 test set 중 train set에 포함된 적 없는 종류의 도서들에 대해 평가한 결과*
 
   | **평균** |         h0 |         h1 |         h2 |         h3 |         h5 |         h7 |       <b> h10</b> |        h12 |
   |:---------|-----------:|-----------:|-----------:|-----------:|-----------:|-----------:|------------------:|-----------:|
@@ -442,7 +437,7 @@
   | R2_SCORE |    0.61977 |    0.70583 |    0.69554 |    0.69004 |    0.71393 |    0.70345 | <b>   0.66289</b> |    0.67403 |
   | 종합순위 |   14       |    7       |   10       |    5       |    1       |    6       | <b>   0      </b> |    2       |
 
-  *도표. Expt.3에서 두 평가에 대해 조화평균을 취하고 순위를 매긴 결과*
+  *<b>도표.</b> Expt.3에서 두 평가에 대해 조화평균을 취하고 순위를 매긴 결과*
 
   - Best model
     - hyperparameter : h10
@@ -453,10 +448,10 @@
       - *colsample_bytree* : 1
       - *subsample* : 1
 
-    *도표. Expt.3 의 best model의 결과값 분포*
+    *<b>도표.</b> Expt.3 의 best model의 결과값 분포*
 
     ![h10_fi](./imgs/h10_fi.png)
-    *도표. Expt.3 의 best model의 feature importance*
+    *<b>도표.</b> Expt.3 의 best model의 feature importance*
 
 ## 6. 결과 분석
 
