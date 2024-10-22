@@ -1,7 +1,7 @@
 <style>
-  r {color : #db2200}
-  g {color : #22db71}
-  b {color : #005adb}
+  rd {color : #db2200}
+  gr {color : #22db71}
+  bl {color : #005adb}
 </style>
 
 # 알라딘 중고 도서 데이터셋 구축 및 그에 기반한 중고 서적 가격 예측 모델
@@ -113,11 +113,11 @@
 - 종속 변수를 제외한 항목 중에서 총 11개의 독립변수 선정
   - BName_sub (도서명에서 괄호 안의 내용), Author_mul (저자 등이 여러 명으로 표기되었는지 여부) 등 파생 항목 포함. 해당 내용은 전처리 파트에서 후술
 
-| 종속 변수 | 독립 변수 |
-|---------|---------|
-| Price | quality, store, BName, BName_sub, Author, Author_mul, Publshr, Pdate, RglPrice, Category, SalesPoint |
+  | 종속 변수 | 독립 변수 |
+  |---------|---------|
+  | Price | quality, store, BName, BName_sub, Author, Author_mul, Publshr, Pdate, RglPrice, Category, SalesPoint |
 
-*도표. 모델의 종속 변수 및 독립 변수*
+  *도표. 모델의 종속 변수 및 독립 변수*
 
 ### 2) 실험 설계
 
@@ -188,14 +188,11 @@
   - 도서 명과 카테고리 관련 열은 일괄적으로 진행
   - 이외의 열은 개별적으로 진행
 
-![image](https://github.com/user-attachments/assets/f4a98000-345b-4695-a2e8-0fbfff784d68)
+  ![image](https://github.com/user-attachments/assets/f4a98000-345b-4695-a2e8-0fbfff784d68)
 
-*그림. 전처리,스케일링후 최종 데이터 예시*
+  *그림. 전처리,스케일링후 최종 데이터 예시*
 
 ## 5. 모델 학습 및 결과
-
-<!--내용 검토 및 이미지 업데이트-->
-<!--실험 설계 부분과 유기적으로 구성하기-->
 
 ### 개요
 
@@ -255,7 +252,7 @@
   |subsample|*1*|1|1|1|
   |mean valid score|**_0.97207_**|0.97172|0.97163|0.97145|
 
-  *도표. 제외한 종속 변수 없는 상황에서 best parameter 및 $R^2$ score*
+  *도표. 제외한 종속 변수 없는 상황에서 best parameter 및 R2 score*
 
 - *Expt. 2* : SalesPoint 제외하고 중고가 예측
 
@@ -269,7 +266,7 @@
   |subsample|*1*|1|1|1|
   |mean valid score|_**0.97139**_|0.97110|0.97058|0.97049|
 
-  *도표. SalesPoint 제외한 상황에서 best parameter 및 $R^2$ score*
+  *도표. SalesPoint 제외한 상황에서 best parameter 및 R2 score*
 
 - *Expt. 3* : SalesPoint, 정가(RglrPrice) 제외하고 중고가 예측
 
@@ -283,7 +280,7 @@
   |subsample|1|*1*|1|1|
   |mean valid score|0.89100|**_0.89926_**|0.89525|0.89449|
 
-  *도표. SalesPoint, RglPrice 제외한 상황에서 best parameter 및 score*
+  *도표. SalesPoint, RglPrice 제외한 상황에서 best parameter 및 R2 score*
 
 - *Expt. 4* : SalesPoint, 정가(RglPrice) 제외하고 할인율 예측
 
@@ -297,7 +294,7 @@
   |subsample|1|1|*1*|1|
   |mean valid score|0.79814|0.79872|**_0.79887_**|0.79823|
 
-  *도표. SalesPoint, RglPrice 제외하고 할인율 예측할 때 best parameter 및 score*
+  *도표. SalesPoint, RglPrice 제외하고 할인율 예측할 때 best parameter 및 R2 score*
 
 ### XGB 모델 학습 및 평가
 
@@ -374,6 +371,7 @@
 
     *도표. Expt.1 의 best model의 결과값 분포*
 
+    ![h3_fi](./imgs/h3_fi.png)
     *도표. Expt.1 의 best model의 feature importance*
 
 - *Expt.2*
@@ -415,6 +413,7 @@
 
     *도표. Expt.2 의 best model의 결과값 분포*
 
+    ![h5_fi](./imgs/h5_fi.png)
     *도표. Expt.2 의 best model의 feature importance*
 
 - *Expt.3*
@@ -448,7 +447,7 @@
   - Best model
     - hyperparameter : h10
       - *num_boost_round* : 2500
-      - *learning_rate* : 0.3
+      - *learning_rate* : 0.5
       - *max_depth* : 6
       - *min_child_weight* : 1
       - *colsample_bytree* : 1
@@ -456,6 +455,7 @@
 
     *도표. Expt.3 의 best model의 결과값 분포*
 
+    ![h10_fi](./imgs/h10_fi.png)
     *도표. Expt.3 의 best model의 feature importance*
 
 ## 6. 결과 분석
