@@ -235,32 +235,44 @@
   - train set에 포함된 적 없는 도서에 대한 중고 매물로 한해서 평가한 경우
 
 - XGBoost Regressor (이하 XGB)
-  - 각 실험 환경에 대해 GridSearch를 진행한 후, 가장 성적이 높았던 두 hyperparameter에 대한 모델 평가 결과를 정리
+  - 각 실험 환경에 대해 GridSearch를 진행한 후, 가장 성적이 높았던 7개의 hyperparameter에 대한 모델 평가 결과를 정리
   - GridSearchCV
     - fold = 3
     - 대상 hyperparamter 및 범위
-      - *n_estimators* : [100,700,2100]
-      - *learning_rate* : [1,0.5,0.3,0.1]
+      - *num_boost_round* : [100,1500,2500]
+      - *learning_rate* : [0.5,0.3,0.1]
       - *max_depth* : [4,5,6]
-      - *colsample_bytree* : [0.3,0.5,1]
+      - *min_child_weight* : [1,4,7]
+      - *colsample_bytree* : [0.5,1]
+      - *subsample* : [0.4,0.7,1]
     - GridSearch 결과 우수했던 hyperparmeter 및 성적
       - *Expt. 1*
 
-        ||h2|h3|
-        |-|-:|-:|
-        |mean test score|||
-        |std test score|||
+        ||h1|**h2**|h3|h4|h5|h6|h7|
+        |-|-:|-:|-:|-:|-:|-:|-:|
+        |num_boost_round|1500|*2500*|2500|2500|2500|2500|2500|
+        |learning_rate|0.3|*0.3*|0.3|0.3|0.3|0.3|0.3|
+        |max_depth|6|*6*|6|6|6|6|6|
+        |min_child_weight|4|*1*|1|4|4|7|7|
+        |colsample_bytree|1|*0.5*|1|0.5|1|0.5|1|
+        |subsample|1|*1*|1|1|1|1|1|
+        |mean valid score|0.97100|**_0.97207_**|0.97172|0.97141|0.97163|0.97145|0.97143|
 
-        *도표. 제외한 종속 변수 없는 상황에서 best parameter 및 score*
+        *도표. 제외한 종속 변수 없는 상황에서 best parameter 및 $R^2$ score*
 
       - *Expt. 2*
 
-        ||h2|h3|
-        |-|-:|-:|
-        |mean test score|**0.9658**|0.9657|
-        |std test score|0.0035|0.0033|
+        ||**h2**|h3|h4|h7|
+        |-|-:|-:|-:|-:|
+        |num_boost_round|2500|2500|2500|2500|
+        |learning_rate|0.3|0.3|0.3|0.3|
+        |max_depth|6|6|6|6|
+        |min_child_weight|1|1|1|7|
+        |colsample_bytree|0.5|1|1|1|
+        |subsample|1|1|1|1|
+        |mean valid score|**0.97139**|0.97110|0.97058|0.97049|
 
-        *도표. SalesPoint 제외한 상황에서 best parameter 및 score*
+        *도표. SalesPoint 제외한 상황에서 best parameter 및 $R^2$ score*
 
       - *Expt. 3*
 
