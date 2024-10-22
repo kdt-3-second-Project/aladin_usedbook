@@ -326,6 +326,7 @@
 
 #### 모델 평가
 
+- 가독성을 고려하여 15개의 hyperparameter 중 각 실험에서 3위 안에 든 hyperparameter의 모음에 default(h0)를 포함한 8종에 대한 결과만 추려서 정리
 - *Expt.1*
   - 학습 결과
 
@@ -363,8 +364,8 @@
       - *colsample_bytree* : 1
       - *subsample* : 1
 
-
-    *<b>도표.</b> Expt.1의 test1에서 best model의 예측값 및 오차 분포와 성적*
+    ![h3_rslt](./imgs/h3_rslt.png)
+    *<b>도표.</b> Expt.1의 test1에서 best model의 예측값 및 오차 분포와 성능*
 
     ![h3_fi](./imgs/h3_fi.png)
     *<b>도표.</b> Expt.1의 best model의 feature importance*
@@ -406,7 +407,8 @@
       - *colsample_bytree* : 1
       - *subsample* : 1
 
-    *<b>도표.</b> Expt.2 의 best model의 결과값 분포*
+    ![h5_rslt](./imgs/h5_rslt.png)
+    *<b>도표.</b> Expt.2의 test1에서 best model의 예측값 및 오차 분포와 성능*
 
     ![h5_fi](./imgs/h5_fi.png)
     *<b>도표.</b> Expt.2 의 best model의 feature importance*
@@ -448,38 +450,57 @@
       - *colsample_bytree* : 1
       - *subsample* : 1
 
-    *<b>도표.</b> Expt.3 의 best model의 결과값 분포*
+    ![h10_rslt](./imgs/h10_rslt.png)
+    *<b>도표.</b> Expt.2의 test1에서 best model의 예측값 및 오차 분포와 성능*
 
     ![h10_fi](./imgs/h10_fi.png)
     *<b>도표.</b> Expt.3 의 best model의 feature importance*
 
 ## 6. 결과 분석
 
-- 가장 성능이 좋았던 분석 모델은 default hyperparmter 설정의 XGBoost 모델
-  - R2_score=0.95, MAPE=0.08, RMSE=811
-  - GridSearch 결과, validation 및 test set에서 성적이 더 잘 나오는 hyperparmeter 설정도 있었음
-  - 하지만 train set에서 등장하지 않았던 도서의 경우엔 hyperparameter가 default인 경우에 더 안정적인 성능을 보임
-  - 어떤 경우에서도 base line(train set에서의 평균값)에 비해 월등히 좋은 성능을 보임
+  ||Expt.1|Expt.2|Expt.3|
+  |:-|-:|-:|-:|
+  |hyperparameter|h3|h5|h10|
+  |RMSE|858.95|857.75|1525.96|
+  |MAPE|0.08583|0.08718|0.15823|
+  |R2 SCORE|0.94074|0.94294|0.66289|
+
+  *<b>도표.</b> 각 실험 별 best model과 성능*
+  
 - feature importance 분석 결과를 바탕으로 중고가 예측에 정가, 도서 명, 중고 등급 등이 주요한 역할을 하는 것을 확인
+- 세일즈 포인트가 있을 때(Expt.1)가 없을 때(Expt.2, Expt.3)에 비해, default hyperparameter의 단순한 모델에서도 학습에서 본 적 없는 종류의 도서(test2)에 대해서도 예측 성능의 차이가 적었음
+  - default hyperparameter가 아닌 경우, 세일즈 포인트를 제외해도 학습된 모델의 성능에 큰 차이가 없었음
+  - h3의 경우 R2 SCORE과 RMSE로 보이는 성능이 다른 hyperparameter에 비해 떨어져도, MAPE에서는 더 높았음
+    - test1에서만 MAPE의 성능이 다른 모델에 비해서 좋았던 것이 아니기 때문에, h1,h5,h7의 과적합이 방지된 모델을 더욱 튜닝하면 성능을 올릴 수 있을 것이라 유추할 수 있음
+- num_boost_round가 큰 모델이 전반적으로 성능이 좋았으나, min_child_weight, colsample_bytree 등으로 과적합에 대해 방지된 모델들이 Expt.1, Expt.2의 test2에서 더 안정적인 결과가 나온 것을 확인
+  - h1,h5,h7의 경우는 Expt.2와 Expt.1에서의 성적에 큰 차이가 없거나, Expt.2에서 더 좋은 성능을 보였음
+  - 정가가 포함되지 않은 상황에서 할인율을 잘 맞추는(Expt.4에서 성능을 보인) hyperparameter가 Expt.1, Expt.2의 test2에서도 전반적으로 강건할 것이라는 예상이 아주 틀리지는 않았음
+- GridSearchCV 과정 중에 더 높은 validation 성적을 보였던 경우가 항상 최고의 성능을 보이지는 않았음
+  - 다만 상위권의 hyperparameter가 상위권의 성능을 유지하는 것을 확인했음
+  - 또한 test2의 성능에 맞춰서 튜닝하기 위해서는 test2에 맞게 만들어진 validation set을 설정해야 함을 확인
 - 정가를 학습 데이터에 포함하지 않았을 때, train set에 등장 한 적 없는 종류의 도서에 대해서는 중고 판매가 예측 성능이 많이 떨어지는 것을 발견
+  - 정가가 포함되어 있는 경우 best model에서 total_gain 기준 feature importance가 매우 큰 것을 확인 할 수 있음
+  - Expt.1, Expt.2에서 learning rate가 높은 hyperparameter는 과적합으로 성능이 좋지 않으나, Expt.3에서는 더 복잡한 모델이 필요하여 성능이 더 잘나온 것으로 유추할 수 있음
 
 ## 7. 결론 및 한계
 
 ### 결론
 
-- Random Forest Regressor 및 XGBoost 등 간단한 모델로도 높은 성능의 모델 개발 가능
+- default hyperparameter의 XGBoost 등 단순한 모델로도 높은 성능의 모델 개발 가능한 데이터 셋
+  - 간단한 모델과 default hyperparmeter로도 높은 성능이 나오는 것으로 보아, 알라딘 중고매장에서 중고 도서 판매 가격을 산정하는 가이드라인이 있을 것이라 추측 가능
 - 도서 명, 중고 등급, 정가, 출판일, 저자 등 실물 중고 도서에서 간단히 확인 가능한 특징만으로도 높은 성능이 충분히 가능
-- 중요하게 본 칼럼이 일반적인 직관에서 크게 벗어나지 않는 모델로 학습됨
-- train set에서 중고 시세를 학습한 적 없는 도서에 대한 중고 가격에 대해서도 큰 차이 없는 성능으로 예측한 것으로 보아, NLP한 결과가 모델에 충분히 반영되었음을 알 수 있음
-- 간단한 모델과 default hyperparmeter로도 높은 성능이 나오는 것으로 보아, 알라딘 중고매장에서 중고 도서 판매 가격을 산정하는 가이드라인이 있을 것이라 추측 가능
+- 세일즈 포인트가 중고가 예측에 큰 도움을 줄 수 있으나, 더 높은 성능의 모델을 학습시키기 위해서는 모델의 복잡도를 높히되 과적합을 방지하는 쪽이 더 유리한 것을 확인 했음
+- train set에서 중고 시세를 학습한 적 없는 종류의 도서에 대한 중고가에 대해서도 좋은 성능으로 예측한 것, best model들의 feature importance 등을 고려하면, NLP한 결과가 모델에 충분히 반영되었음을 알 수 있음
+- validation set을 통해 hyperparameter 튜닝을 하기 위해서는, test set의 성질을 잘 대표해야 함을 확인함
+  - 다만 validation set과 비슷한 성질을 가지지 않은 test set을 이용하여 어떤 모델이 더 강건할지 예측하는 것은 의미가 있음
+- Neural Network를 이용한 더 복잡한 모델을 이용하면, 정가 없이 중고도서 할인율을 예측하거나 도서 정보로 정가를 예측하는 모델을 만들 때 더 높은 성능을 보일 수 있을 것이라 추측
 
 ### 한계 평가
 
-- 정가를 데이터 셋에 포함하지 않는 모델 개발의 어려움
+- Grid Search보다 Bayesian Search 등 보다 효율적인 hyperparameter 탐색법을 이용했으면, 연산량을 보다 효율적으로 활용할 수 있었을 것이라 기대
+- 정가를 데이터 셋에 포함하지 않는 상황에서도 성능을 높히는 것이 가능할 것 같으나 시도하지 못했음
   - 정가를 포함하지 않았을 때, train set에 없는 데이터에 대해서는 중고 판매가 예측 성능이 많이 떨어지는 것을 발견
-  - 보완하기 위해 중고 도서의 할인율을 예측하는 모델 개발 시도
-    - XGB는 hyperparameter에 따라 R2 score 0.75~0.82 정도로 학습됨
-    - 데이터셋에 포함되지 않았던 도서의 중고 매물도 안정적으로 예측하나, 성능을 더 올리기는 어려웠음
+  - XGB로는 한계가 있고, Neural Network를 이용해야 할 것으로 예상
 - 저자명, 출판사를 인코딩 중 기타 항목으로 처리할 때 threshold 기준의 구체적인 근거를 제시하지 못 함
   - 알라딘의 Sales Point 및 개인적 경험에서의 인지도를 바탕으로 결정
   - 추가적인 조사를 통해 더 객관적이고 제시 가능한 근거 확립 가능
