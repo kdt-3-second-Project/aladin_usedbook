@@ -531,3 +531,8 @@
 - 배포 가능한 알라딘 중고도서 데이터 셋으로 정리하여 공개
 - 베스트 셀러 이외의 도서, 공식 매점에서 판매하지 않는 도서 등으로 데이터 셋 및 프로젝트 확장
   - 베스트 셀러에 포함된 적 없는 도서도 대상으로 하기 위한 크롤링 방법 개발 필요
+
+## 9. 참고 문헌
+
+- [XGBoost documentation](https://xgboost.readthedocs.io/en/stable/python/index.html)
+- [cupy documentation](https://docs.cupy.dev/en/stable/reference/ndarray.html)
