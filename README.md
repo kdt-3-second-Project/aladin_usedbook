@@ -2,7 +2,22 @@
 
 프로젝트 구성원: 오도은, 박예림, 이준성, 정홍섭 / [발표 슬라이드](https://docs.google.com/presentation/d/15EIOMGpadZQf3cT2k0pfClS9DVICLmmf5ZTH1k4XnKc/edit?usp=sharing)
 
-**사용된 스킬 셋**: NumPy, Pandas, Matplotlib, Beautifulsoup, re, Scikit-learn, xgboost, [Mecab](https://pypi.org/project/python-mecab-ko/)
+**사용된 스킬 셋**: NumPy, Pandas, Matplotlib, Beautifulsoup, re, Scikit-learn, xgboost, [Mecab](https://pypi.org/project/python-mecab-ko/), cupy
+
+## 0. 초록
+
+- 알라딘 00년 1월 1주차 ~ 24년 7월 2주차의 베스트셀러 목록을 크롤링하여 141.5만 행의 DB 구축
+  - 15.8만 여종의 도서에 대하여, 해당 주차에서의 순위 및 도서 관련 정보를 포함
+- 주간 베스트 셀러 DB를 바탕으로, 78만 행의 알라딘 중고 매장의 중고 도서 DB 구축
+  - 10.3만 여종의 역대 베스트셀러 도서에 대한 중고 도서 매물 데이터
+- XGBoost Regressor를 이용하여 중고가 예측 모델 개발
+  - cross validation과 grid search를 이용하여 486개의 조합 중 우수 hyperparameter 14개를 추림
+  - 우수 hyperparameter로 학습한 모델들에 대해서 test set으로 나눈 데이터 전체에 대한 평가와 test set 중 train set에 포함된 적 없는 종류의 도서에 제한한 평가를 따로 진행
+- best model 성적
+  - test 1 : 초기에 test set으로 나눈 데이터로 평가
+    - **RMSE** : 610.7, **R2 Score** : 0.973, **test set 크기** : 784,213
+  - test 2 : test set 중 train set에 포함된 적 없는 종류의 도서에 한해서 평가
+    - **RMSE** : 1,440, **R2 Score** : 0.914, **test set 크기** : 5,968
 
 ## 1. 프로젝트 개요
 
