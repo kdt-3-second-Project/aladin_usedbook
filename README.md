@@ -15,7 +15,7 @@
   - 우수 hyperparameter로 학습한 모델들에 대해서 test set으로 나눈 데이터 전체에 대한 평가와 test set 중 train set에 포함된 적 없는 종류의 도서에 제한한 평가를 따로 진행
 - best model 성적
   - test 1 : 초기에 test set으로 나눈 데이터로 평가
-    - **RMSE** : 610.7, **R2 Score** : 0.973, **test set 크기** : 784,213
+    - **RMSE** : 610.7, **R2 Score** : 0.973, **test set 크기** : 156,843
   - test 2 : test set 중 train set에 포함된 적 없는 종류의 도서에 한해서 평가
     - **RMSE** : 1,440, **R2 Score** : 0.914, **test set 크기** : 5,968
 
