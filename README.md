@@ -534,5 +534,6 @@
 
 ## 9. 참고 문헌
 
+- [Bryce and Eddie, 딥 러닝을 이용한 자연어 처리 입문, Wikidocs, 2024](https://wikidocs.net/book/2155)
 - [XGBoost documentation](https://xgboost.readthedocs.io/en/stable/python/index.html)
 - [cupy documentation](https://docs.cupy.dev/en/stable/reference/ndarray.html)
